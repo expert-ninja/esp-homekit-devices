@@ -3033,7 +3033,7 @@ void run_homekit_server() {
 
 void printf_header() {
     printf("\n\n\n");
-    printf("Home Accessory Architect v%s\n", FIRMWARE_VERSION);
+    printf("Espy House v%s\n", FIRMWARE_VERSION);
     printf("Developed by José Antonio Jiménez Campos (@RavenSystem)\n\n");
     
 #ifdef HAA_DEBUG
