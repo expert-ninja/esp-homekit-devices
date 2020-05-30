@@ -30,7 +30,7 @@
 #include <rboot-api.h>
 #include <homekit/homekit.h>
 
-#define CUSTOM_REPO_SYSPARAM            "ota_sever"
+#define CUSTOM_REPO_SYSPARAM            "ota_server"
 #define PORT_NUMBER_SYSPARAM            "ota_port"
 #define PORT_SECURE_SYSPARAM            "ota_sec"
 #define OTA_VERSION_SYSPARAM            "ota_repo"
