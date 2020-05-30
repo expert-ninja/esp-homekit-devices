@@ -13,7 +13,7 @@
 #ifndef __HAA_OTA_H__
 #define __HAA_OTA_H__
 
-#define OTAREPO                 "github.com/RavenSystem/haa/releases/latest/download"
+#define OTAREPO                 "github.com/expert-ninja/espy-house/releases/latest/download"
 #define OTAMAINFILE             "otamain.bin"
 #define OTABOOTFILE             "haaboot.bin"
 #define HAAMAINFILE             "haamain.bin"
