@@ -201,5 +201,5 @@ void user_init(void) {
         printf("! Sysparam %d\n", status);
     }
         
-    wifi_config_init("HAA", NULL, on_wifi_ready);
+    wifi_config_init("ESPY", NULL, on_wifi_ready);
 }

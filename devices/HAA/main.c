@@ -5756,7 +5756,7 @@ void normal_mode_init() {
     
     cJSON_Delete(json_haa);
     
-    wifi_config_init("HAA", NULL, run_homekit_server, custom_hostname);
+    wifi_config_init("ESPY", NULL, run_homekit_server, custom_hostname);
     
     vTaskDelete(NULL);
 }
@@ -5803,7 +5803,7 @@ void user_init(void) {
         uart_set_baud(0, 115200);
         printf_header();
         printf("SETUP MODE\n");
-        wifi_config_init("HAA", NULL, NULL, name.value.string_value);
+        wifi_config_init("ESPY", NULL, NULL, name.value.string_value);
         
     } else {
         // Arming emergency Setup Mode
