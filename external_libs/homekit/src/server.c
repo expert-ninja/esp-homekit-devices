@@ -1,6 +1,7 @@
 #include "server.h"
 
 #include <ctype.h>
+#include <rboot-api.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -2044,6 +2045,8 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
     sdk_system_overclock();
 #endif
 
+    int update_now = 0;
+
     query_param_t *qp = context->endpoint_params;
     while (qp) {
         CLIENT_INFO(context, "Query parameter %s = %s", qp->name, qp->value);
@@ -2068,20 +2071,30 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
                 sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
             }
         }
+        if ((strcmp(qp->name, "update_now") == 0) && (strcmp(qp->value, "1") == 0)) {
+            update_now = 1;
+        }
         qp = qp->next;
     }
 
-    HOMEKIT_INFO("Setup mode, rebooting");
+    if (update_now == 0) {
+        HOMEKIT_INFO("Setup mode, rebooting");
+    } else {
+        HOMEKIT_INFO("Update mode, rebooting");
+    }
 
     client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
     client_send_chunk(NULL, 0, context);
 
-    sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    if (update_now == 0) {
+        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+    } else {
+        rboot_set_temp_rom(1);
+    }
 
     sdk_system_restart();
-
 
 #ifdef HOMEKIT_OVERCLOCK_GET_ACC
     sdk_system_restoreclock();
