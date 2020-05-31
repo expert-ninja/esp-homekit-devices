@@ -1,9 +1,12 @@
+#include "server.h"
+
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <sysparam.h>
 
 #include <lwip/sockets.h>
 
@@ -69,6 +72,7 @@ typedef enum {
     HOMEKIT_ENDPOINT_PAIRINGS,
     HOMEKIT_ENDPOINT_RESOURCE,
     HOMEKIT_ENDPOINT_PREPARE,
+    HOMEKIT_ENDPOINT_SETUP_MODE,
 } homekit_endpoint_t;
 
 
@@ -2031,6 +2035,58 @@ void homekit_server_on_get_accessories(client_context_t *context) {
 #endif
 }
 
+void homekit_server_on_get_setup_mode(client_context_t *context) {
+    CLIENT_INFO(context, "Get Setup Mode");
+    DEBUG_HEAP();
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_overclock();
+#endif
+
+    query_param_t *qp = context->endpoint_params;
+    while (qp) {
+        CLIENT_INFO(context, "Query parameter %s = %s", qp->name, qp->value);
+        if (strcmp(qp->name, "autoota") == 0) {
+            if (strcmp(qp->value, "1") == 0) {
+                sysparam_set_bool(AUTO_OTA_SYSPARAM, true);
+            } else {
+                sysparam_set_bool(AUTO_OTA_SYSPARAM, false);
+            }
+        }
+        if (strcmp(qp->name, "reposerver") == 0) {
+            sysparam_set_string(CUSTOM_REPO_SYSPARAM, qp->value);
+        }
+        if (strcmp(qp->name, "repoport") == 0) {
+            const int32_t port = strtol(qp->value, NULL, 10);
+            sysparam_set_int32(PORT_NUMBER_SYSPARAM, port);
+        }
+        if (strcmp(qp->name, "repossl") == 0) {
+            if (strcmp(qp->value, "1") == 0) {
+                sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
+            } else {
+                sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
+            }
+        }
+        qp = qp->next;
+    }
+
+    HOMEKIT_INFO("Setup mode, rebooting");
+
+    client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
+    client_send_chunk(NULL, 0, context);
+
+    sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    sdk_system_restart();
+
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_restoreclock();
+#endif
+}
+
 void homekit_server_on_get_characteristics(client_context_t *context) {
     CLIENT_INFO(context, "Get Characteristics");
     DEBUG_HEAP();
@@ -2925,7 +2981,21 @@ int homekit_server_on_url(http_parser *parser, const char *data, size_t length) 
     if (parser->method == HTTP_GET) {
         if (!strncmp(data, "/accessories", length)) {
             context->endpoint = HOMEKIT_ENDPOINT_GET_ACCESSORIES;
-        } else {
+        } else if (strncmp(data, "/setup_mode", length) >= 0) {
+            static const char url[] = "/setup_mode";
+            size_t url_len = sizeof(url)-1;
+
+            if (length >= url_len && !strncmp(data, url, url_len) &&
+                    (data[url_len] == 0 || data[url_len] == '?'))
+            {
+                context->endpoint = HOMEKIT_ENDPOINT_SETUP_MODE;
+                if (data[url_len] == '?') {
+                    char *query = strndup(data+url_len+1, length-url_len-1);
+                    context->endpoint_params = query_params_parse(query);
+                    free(query);
+                }
+            }
+        } else if (strncmp(data, "/characteristics", length) >= 0) {
             static const char url[] = "/characteristics";
             size_t url_len = sizeof(url)-1;
 
@@ -3033,6 +3103,10 @@ int homekit_server_on_message_complete(http_parser *parser) {
             if (context->encrypted || allow_insecure_connections) {
                 homekit_server_on_prepare(context);
             }
+            break;
+        }
+        case HOMEKIT_ENDPOINT_SETUP_MODE: {
+            homekit_server_on_get_setup_mode(context);
             break;
         }
         case HOMEKIT_ENDPOINT_UNKNOWN: {
