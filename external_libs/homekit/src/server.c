@@ -73,6 +73,7 @@ typedef enum {
     HOMEKIT_ENDPOINT_RESOURCE,
     HOMEKIT_ENDPOINT_PREPARE,
     HOMEKIT_ENDPOINT_SETUP_MODE,
+    HOMEKIT_ENDPOINT_GET_VERSION
 } homekit_endpoint_t;
 
 
@@ -2087,6 +2088,40 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
 #endif
 }
 
+void homekit_server_on_get_version(client_context_t *context) {
+    CLIENT_INFO(context, "Get Version");
+    DEBUG_HEAP();
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_overclock();
+#endif
+
+#define OTA_VERSION_SYSPARAM    "ota_repo"
+#define USER_VERSION_SYSPARAM   "ota_version"
+    char *ota_version = NULL;
+    char *user_version = NULL;
+    sysparam_get_string(OTA_VERSION_SYSPARAM, &ota_version);
+    sysparam_get_string(USER_VERSION_SYSPARAM, &user_version);
+
+    client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
+
+    json_stream *json = json_new(64, client_send_chunk, context);
+    json_object_start(json);
+    json_string(json, "ota"); json_string(json, ota_version);
+    json_string(json, "main"); json_string(json, user_version);
+
+    json_object_end(json);
+
+    json_flush(json);
+    json_free(json);
+
+    client_send_chunk(NULL, 0, context);
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_restoreclock();
+#endif
+}
+
 void homekit_server_on_get_characteristics(client_context_t *context) {
     CLIENT_INFO(context, "Get Characteristics");
     DEBUG_HEAP();
@@ -2981,12 +3016,13 @@ int homekit_server_on_url(http_parser *parser, const char *data, size_t length) 
     if (parser->method == HTTP_GET) {
         if (!strncmp(data, "/accessories", length)) {
             context->endpoint = HOMEKIT_ENDPOINT_GET_ACCESSORIES;
+        } else if (!strncmp(data, "/version", length)) {
+            context->endpoint = HOMEKIT_ENDPOINT_GET_VERSION;
         } else if (strncmp(data, "/setup_mode", length) >= 0) {
             static const char url[] = "/setup_mode";
             size_t url_len = sizeof(url)-1;
 
-            if (length >= url_len && !strncmp(data, url, url_len) &&
-                    (data[url_len] == 0 || data[url_len] == '?'))
+            if (length >= url_len && (data[url_len] == ' ' || data[url_len] == '?'))
             {
                 context->endpoint = HOMEKIT_ENDPOINT_SETUP_MODE;
                 if (data[url_len] == '?') {
@@ -2999,8 +3035,7 @@ int homekit_server_on_url(http_parser *parser, const char *data, size_t length) 
             static const char url[] = "/characteristics";
             size_t url_len = sizeof(url)-1;
 
-            if (length >= url_len && !strncmp(data, url, url_len) &&
-                    (data[url_len] == 0 || data[url_len] == '?'))
+            if (length >= url_len && (data[url_len] == ' ' || data[url_len] == '?'))
             {
                 context->endpoint = HOMEKIT_ENDPOINT_GET_CHARACTERISTICS;
                 if (data[url_len] == '?') {
@@ -3107,6 +3142,10 @@ int homekit_server_on_message_complete(http_parser *parser) {
         }
         case HOMEKIT_ENDPOINT_SETUP_MODE: {
             homekit_server_on_get_setup_mode(context);
+            break;
+        }
+        case HOMEKIT_ENDPOINT_GET_VERSION: {
+            homekit_server_on_get_version(context);
             break;
         }
         case HOMEKIT_ENDPOINT_UNKNOWN: {
