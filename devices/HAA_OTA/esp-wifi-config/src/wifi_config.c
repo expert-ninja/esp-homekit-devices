@@ -1,13 +1,17 @@
 /*
-* Home Accessory Architect OTA Update
-*
-* Copyright 2020 José Antonio Jiménez Campos (@RavenSystem)
-*
-*/
+ * Espy House OTA
+ *
+ * Copyright 2020 Expert Ninja
+ *
+ */
 
 /*
+ * Based on Home Accessory Architect (HAA) by José Antonio Jiménez Campos (@RavenSystem), licensed under Apache License 2.0.
+ * https://github.com/RavenSystem/esp-homekit-devices
+ *
  * Based on esp-wifi-config library by Maxim Kulkin (@MaximKulkin), licensed under the MIT License.
  * https://github.com/maximkulkin/esp-wifi-config
+ *
  */
 
 #include <stdio.h>

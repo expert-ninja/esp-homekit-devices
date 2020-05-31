@@ -1,7 +1,13 @@
 /*
- * Home Accessory Architect
+ * Espy House
  * 
- * Copyright 2019-2020 José Antonio Jiménez Campos (@RavenSystem)
+ * Copyright 2020 Expert Ninja
+ *
+ */
+
+/*
+ * Based on Home Accessory Architect (HAA) by José Antonio Jiménez Campos (@RavenSystem), licensed under Apache License 2.0.
+ * https://github.com/RavenSystem/esp-homekit-devices
  *
  */
 
@@ -3007,8 +3013,8 @@ void delayed_sensor_starter_task(void *args) {
 
 homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, NULL);
 homekit_characteristic_t serial = HOMEKIT_CHARACTERISTIC_(SERIAL_NUMBER, NULL);
-homekit_characteristic_t manufacturer = HOMEKIT_CHARACTERISTIC_(MANUFACTURER, "José A. Jiménez Campos");
-homekit_characteristic_t model = HOMEKIT_CHARACTERISTIC_(MODEL, "RavenSystem HAA");
+homekit_characteristic_t manufacturer = HOMEKIT_CHARACTERISTIC_(MANUFACTURER, "Expert Ninja");
+homekit_characteristic_t model = HOMEKIT_CHARACTERISTIC_(MODEL, "Espy House");
 homekit_characteristic_t identify_function = HOMEKIT_CHARACTERISTIC_(IDENTIFY, identify);
 homekit_characteristic_t firmware = HOMEKIT_CHARACTERISTIC_(FIRMWARE_REVISION, FIRMWARE_VERSION);
 homekit_characteristic_t hap_version = HOMEKIT_CHARACTERISTIC_(VERSION, "1.1.0");
@@ -3043,7 +3049,7 @@ void run_homekit_server() {
 void printf_header() {
     printf("\n\n\n");
     printf("Espy House v%s\n", FIRMWARE_VERSION);
-    printf("Developed by José Antonio Jiménez Campos (@RavenSystem)\n\n");
+    printf("Developed by Expert Ninja\n\n");
     
 #ifdef HAA_DEBUG
     printf("HAA DEBUG ENABLED\n\n");
