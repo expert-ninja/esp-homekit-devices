@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include "form_urlencoded.h"
 
-
 char *url_unescape(const char *buffer, size_t size) {
     int len = 0;
 
@@ -110,5 +109,3 @@ void form_params_free(form_param_t *params) {
         params = next;
     }
 }
-
-
