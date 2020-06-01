@@ -2050,34 +2050,44 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
     query_param_t *qp = context->endpoint_params;
     while (qp) {
         CLIENT_INFO(context, "Query parameter %s = %s", qp->name, qp->value);
-        if (strcmp(qp->name, "autoota") == 0) {
-            if (strcmp(qp->value, "1") == 0) {
+        if (!strcmp(qp->name, "autoota")) {
+            if (!strcmp(qp->value, "1")) {
                 sysparam_set_bool(AUTO_OTA_SYSPARAM, true);
             } else {
                 sysparam_set_bool(AUTO_OTA_SYSPARAM, false);
             }
         }
-        if (strcmp(qp->name, "reposerver") == 0) {
+        if (!strcmp(qp->name, "reposerver")) {
             sysparam_set_string(CUSTOM_REPO_SYSPARAM, qp->value);
         }
-        if (strcmp(qp->name, "repoport") == 0) {
+        if (!strcmp(qp->name, "repoport")) {
             const int32_t port = strtol(qp->value, NULL, 10);
             sysparam_set_int32(PORT_NUMBER_SYSPARAM, port);
         }
-        if (strcmp(qp->name, "repossl") == 0) {
-            if (strcmp(qp->value, "1") == 0) {
+        if (!strcmp(qp->name, "repossl")) {
+            if (!strcmp(qp->value, "1")) {
                 sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
             } else {
                 sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
             }
         }
-        if ((strcmp(qp->name, "update_now") == 0) && (strcmp(qp->value, "1") == 0)) {
+        if (!strcmp(qp->name, "reset_main")) {
+            if (!strcmp(qp->value, "1")) {
+                sysparam_set_string(USER_VERSION_SYSPARAM, "none");
+            }
+        }
+        if (!strcmp(qp->name, "reset_ota")) {
+            if (!strcmp(qp->value, "1")) {
+                sysparam_set_string(OTA_VERSION_SYSPARAM, "none");
+            }
+        }
+        if ((!strcmp(qp->name, "update_now")) && (!strcmp(qp->value, "1"))) {
             update_now = 1;
         }
         qp = qp->next;
     }
 
-    if (update_now == 0) {
+    if (!update_now) {
         HOMEKIT_INFO("Setup mode, rebooting");
     } else {
         HOMEKIT_INFO("Update mode, rebooting");
@@ -2109,8 +2119,6 @@ void homekit_server_on_get_version(client_context_t *context) {
     sdk_system_overclock();
 #endif
 
-#define OTA_VERSION_SYSPARAM    "ota_repo"
-#define USER_VERSION_SYSPARAM   "ota_version"
     char *ota_version = NULL;
     char *user_version = NULL;
     sysparam_get_string(OTA_VERSION_SYSPARAM, &ota_version);
