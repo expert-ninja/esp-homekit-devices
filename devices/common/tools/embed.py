@@ -1,15 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import re
 import sys
 
-
 def gen_embedded(content):
     content = re.sub(r'{{.*?}}', '%s', re.sub(r'{%.*?%}', '', content))
-
     part_headers = list(re.finditer(r'<!-- part (\S+) -->', content))
     if not part_headers:
-        print 'Error: no parts found'
+        print('Error: no parts found')
         return
 
     def process_part(part):
@@ -37,8 +35,18 @@ def gen_embedded(content):
 
 def main():
     file_path = sys.argv[1]
+    vars = {}
+    with open("header.h") as f:
+        for cnt, line in enumerate(f):
+            p = line.rstrip().split(" ")
+            if (p[0] == '#define'):
+                v = p[-1]
+                if (v[0] == '"' and v[-1] == '"'):
+                    v = v[1:-1]
+                vars['DEF_' + p[1]] = v
     with open(file_path) as f:
-        print gen_embedded(f.read())
+        content = f.read().replace('{', '{{').replace('}', '}}').replace('[[[', '{').replace(']]]', '}')
+        print(gen_embedded(content.format(**vars)))
 
 
 if __name__ == '__main__':
