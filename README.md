@@ -1,4 +1,4 @@
-# espy house
+# Espy House
 
 Works to bring native Apple HomeKit support to any device based on an ESP8266/ESP8285 microcontroller.
 
