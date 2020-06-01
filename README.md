@@ -4,7 +4,7 @@ Works to bring native Apple HomeKit support to any device based on an ESP8266/ES
 
 [![Release](https://img.shields.io/github/v/tag/expert-ninja/espy-house?color=red&label=release)](https://github.com/expert-ninja/espy-house)
 [![GitHub download](https://img.shields.io/github/downloads/expert-ninja/espy-house/total.svg)](https://github.com/expert-ninja/espy-house/releases/latest)
-[![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/expert-ninja)
+[![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/expninja)
 
 Based on [esp-homekit-devices](https://github.com/RavenSystem/esp-homekit-devices).
 
