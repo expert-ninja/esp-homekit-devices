@@ -250,34 +250,47 @@ static void wifi_config_server_on_settings(client_t *client) {
     client_send_chunk(client, html_settings_middle);
 
     // Repository server
+    int8_t int8_value = 0;
+    int32_t int32_value;
+
     status = sysparam_get_string(CUSTOM_REPO_SYSPARAM, &text);
     if (status == SYSPARAM_OK) {
+        status = sysparam_get_int8(PORT_SECURE_SYSPARAM, &int8_value);
+        if (status != SYSPARAM_OK || (status == SYSPARAM_OK && int8_value == 1)) {
+            int8_value = 1;
+            client_send_chunk(client, "https://");
+        } else {
+            client_send_chunk(client, "http://");
+        }
+
+        char* slash = strchr(text, '/');
+        if (slash != NULL) *slash = 0;
+
         client_send_chunk(client, text);
+
+        status = sysparam_get_int32(PORT_NUMBER_SYSPARAM, &int32_value);
+        if (status == SYSPARAM_OK) {
+            if ( ((int8_value == 0) && (int32_value != 80)) ||
+               ((int8_value == 1) && (int32_value != 443)) )
+            {
+                char str_port[6];
+                itoa(int32_value, str_port, 10);
+                client_send_chunk(client, ":");
+                client_send_chunk(client, str_port);
+            }
+        }
+
+        if (slash != NULL) {
+            *slash = '/';
+            client_send_chunk(client, slash);
+        }
+
         free(text);
+        text = NULL;
     }
     client_send_chunk(client, html_settings_reposerver);
 
-    // Repository server port
-    int32_t int32_value;
-
-    status = sysparam_get_int32(PORT_NUMBER_SYSPARAM, &int32_value);
-    if (status == SYSPARAM_OK) {
-        char str_port[6];
-        itoa(int32_value, str_port, 10);
-        client_send_chunk(client, str_port);
-    }
-    client_send_chunk(client, html_settings_repoport);
-
-    // Repository server SSL
-    int8_t int8_value = 0;
-
-    status = sysparam_get_int8(PORT_SECURE_SYSPARAM, &int8_value);
-    if (status != SYSPARAM_OK || (status == SYSPARAM_OK && int8_value == 1)) {
-        client_send_chunk(client, "checked");
-    }
-    client_send_chunk(client, html_settings_repossl);
-
-    // Auto OTA
+    // OTA version
     status = sysparam_get_string(OTA_VERSION_SYSPARAM, &text);
     if (text) {
         client_send_chunk(client, text);
@@ -285,6 +298,8 @@ static void wifi_config_server_on_settings(client_t *client) {
         text = NULL;
     }
     client_send_chunk(client, html_settings_otaversion);
+
+    // Auto OTA
     bool auto_ota = false;
     status = sysparam_get_bool(AUTO_OTA_SYSPARAM, &auto_ota);
     if (status == SYSPARAM_OK && auto_ota) {
@@ -366,8 +381,6 @@ static void wifi_config_server_on_settings_update_task(void* args) {
     form_param_t *bssid_param = form_params_find(form, "bssid");
     form_param_t *password_param = form_params_find(form, "password");
     form_param_t *reposerver_param = form_params_find(form, "reposerver");
-    form_param_t *repoport_param = form_params_find(form, "repoport");
-    form_param_t *repossl_param = form_params_find(form, "repossl");
     // Remove saved states
     int8_t hk_total_ac = 0;
     sysparam_get_int8(TOTAL_ACC_SYSPARAM, &hk_total_ac);
@@ -395,20 +408,80 @@ static void wifi_config_server_on_settings_update_task(void* args) {
     if (reset_param) {
         homekit_server_reset();
     }
+
     if (reposerver_param->value) {
-        sysparam_set_string(CUSTOM_REPO_SYSPARAM, reposerver_param->value);
-    } else {
+        struct http_parser_url u;
+        char* decoded_url;
+        char* server_schema = NULL;
+        char* server_host = NULL;
+        char* server_path = NULL;
+        int32_t server_port = 0;
+
+        decoded_url = url_unescape(reposerver_param->value, strlen(reposerver_param->value));
+        http_parser_url_init(&u);
+        if (!http_parser_parse_url(decoded_url, strlen(decoded_url), 0, &u)) {
+            if ((u.field_set & (1 << UF_SCHEMA))) {
+                server_schema = malloc(u.field_data[UF_SCHEMA].len + 1);
+                strncpy(server_schema, reposerver_param->value + u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
+                server_schema[u.field_data[UF_SCHEMA].len] = 0;
+            }
+
+            if ((u.field_set & (1 << UF_HOST))) {
+                server_host = malloc(u.field_data[UF_HOST].len + 1);
+                strncpy(server_host, reposerver_param->value + u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
+                server_host[u.field_data[UF_HOST].len] = 0;
+            }
+
+            if ((u.field_set & (1 << UF_PATH))) {
+                server_path = malloc(u.field_data[UF_PATH].len + 1);
+                strncpy(server_path, reposerver_param->value + u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
+                server_path[u.field_data[UF_PATH].len] = 0;
+            }
+
+            if ((u.field_set & (1 << UF_PORT))) server_port = u.port;
+
+            if (server_host != NULL) {
+                if (server_path != NULL) {
+                    uint16_t server_host_len = strlen(server_host);
+                    uint16_t server_path_len = strlen(server_path);
+
+                    char* server_host_path = malloc(server_host_len + server_path_len + 1);
+                    strncpy(server_host_path, server_host, server_host_len);
+                    strncpy(server_host_path + server_host_len, server_path, server_path_len);
+                    server_host_path[server_host_len + server_path_len] = 0;
+                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, server_host_path);
+                    free(server_host_path);
+                    free(server_path);
+                } else {
+                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, server_host);
+                }
+                free(server_host);
+
+                if (server_schema != NULL) {
+                    if (!strcmp(server_schema, "https")) {
+                        sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
+                        if (server_port == 0) server_port = 443;
+                    } else {
+                        sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
+                        if (server_port == 0) server_port = 80;
+                    }
+                    free(server_schema);
+                } else {
+                    sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
+                    if (server_port == 0) server_port = 443;
+                }
+                sysparam_set_int32(PORT_NUMBER_SYSPARAM, server_port);
+            } else { // host not found
+                sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
+            }
+        } else { // parsing failed
+            sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
+        }
+        free(decoded_url);
+    } else { // empty string
         sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
     }
-    if (repoport_param->value) {
-        const int32_t port = strtol(repoport_param->value, NULL, 10);
-        sysparam_set_int32(PORT_NUMBER_SYSPARAM, port);
-    }
-    if (repossl_param) {
-        sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
-    } else {
-        sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
-    }
+
     if (ssid_param->value) {
         sysparam_set_string(WIFI_SSID_SYSPARAM, ssid_param->value);
 

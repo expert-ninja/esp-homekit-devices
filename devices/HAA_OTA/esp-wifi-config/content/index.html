@@ -28,12 +28,9 @@ input[type=submit][disabled]{color:#aaaaaa;background-color:#eeeeee !important;}
 <div class="field required conf">
 <label for="conf">JSON Config:</label>
 <textarea id="conf" name="conf">
-<!-- part HTML_SETTINGS_MIDDLE --></textarea><br>
+<!-- part HTML_SETTINGS_MIDDLE --></textarea></div><div class="field conf">
 <label for="repo">Custom server for updates:</label>
-<input type="text" id="reposerver" name="reposerver" value="<!-- part HTML_SETTINGS_REPOSERVER -->" />
-<label for="repo">Customer server port:</label>
-<input type="text" id="repoport" name="repoport" maxlength="5" value="<!-- part HTML_SETTINGS_REPOPORT -->" />
-<input type="checkbox" name="repossl" value="y" <!-- part HTML_SETTINGS_REPOSSL -->> Customer server SSL<br>
+<input type="text" id="reposerver" name="reposerver" placeholder="https://github.com/expert-ninja/espy-house" value="<!-- part HTML_SETTINGS_REPOSERVER -->" />
 <input type="checkbox" name="nowifi" value="y"> Remove WiFi Settings<br>
 <input type="checkbox" name="autoota" value="y" <!-- part HTML_SETTINGS_AUTOOTA -->> Auto OTA Updates<br>
 <label for="wifimode"> WiFi connection mode <select name="wifimode">
