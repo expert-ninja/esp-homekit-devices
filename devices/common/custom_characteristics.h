@@ -72,7 +72,7 @@
 #define HOMEKIT_CHARACTERISTIC_CUSTOM_HAA_UPDATE HOMEKIT_CUSTOM_UUID("F0000005")
 #define HOMEKIT_DECLARE_CHARACTERISTIC_CUSTOM_HAA_UPDATE(_value, ...) \
     .type = HOMEKIT_CHARACTERISTIC_CUSTOM_HAA_UPDATE, \
-    .description = "Firmware HAA", \
+    .description = "Firmware ESPY", \
     .format = homekit_format_bool, \
     .permissions = homekit_permissions_paired_read \
     | homekit_permissions_paired_write \

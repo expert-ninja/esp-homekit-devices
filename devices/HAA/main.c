@@ -2079,7 +2079,7 @@ void http_get_task(void *pvParameters) {
                         } else {
                             action_http->len = 69 + strlen(method) + ((method_req != NULL) ? strlen(method_req) : 0) + strlen(FIRMWARE_VERSION) + strlen(action_http->host) +  strlen(action_http->url) + content_len_n;
                             req = malloc(action_http->len);
-                            snprintf(req, action_http->len, "%s /%s HTTP/1.1\r\nHost: %s\r\nUser-Agent: HAA/"FIRMWARE_VERSION" esp8266\r\nConnection: close\r\n%s\r\n%s",
+                            snprintf(req, action_http->len, "%s /%s HTTP/1.1\r\nHost: %s\r\nUser-Agent: ESPY/"FIRMWARE_VERSION" esp8266\r\nConnection: close\r\n%s\r\n%s",
                                      method,
                                      action_http->url,
                                      action_http->host,
@@ -4632,7 +4632,7 @@ void normal_mode_init() {
         new_accessory(accessory, 4 + inputs);
 
         homekit_characteristic_t *ch0 = NEW_HOMEKIT_CHARACTERISTIC(ACTIVE, 0, .setter_ex=hkc_tv_active);
-        homekit_characteristic_t *ch1 = NEW_HOMEKIT_CHARACTERISTIC(CONFIGURED_NAME, "HAA TV", .setter_ex=hkc_tv_configured_name);
+        homekit_characteristic_t *ch1 = NEW_HOMEKIT_CHARACTERISTIC(CONFIGURED_NAME, "ESPY TV", .setter_ex=hkc_tv_configured_name);
         homekit_characteristic_t *ch2 = NEW_HOMEKIT_CHARACTERISTIC(ACTIVE_IDENTIFIER, 1, .setter_ex=hkc_tv_active_identifier);
         homekit_characteristic_t *ch3 = NEW_HOMEKIT_CHARACTERISTIC(REMOTE_KEY, .setter_ex=hkc_tv_key);
         homekit_characteristic_t *ch4 = NEW_HOMEKIT_CHARACTERISTIC(POWER_MODE_SELECTION, 0, .setter_ex=hkc_tv_power_mode);
