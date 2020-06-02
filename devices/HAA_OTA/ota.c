@@ -74,16 +74,12 @@ static char *strstr_lc(const char *full_string, const char *search) {
         *ch = tolower(*ch);
         ch++;
     }
-    
     char *found = strstr(lc_string, search);
     free(lc_string);
-    
     if (found == NULL) {
         return NULL;
     }
-    
     const int offset = (uint32_t) found - (uint32_t) lc_string;
-    
     return (char *) ((uint32_t) full_string + offset);
 }
 
@@ -113,7 +109,6 @@ void ota_init(char* repo, const bool is_ssl) {
     printf("INIT\n");
 
     ip_addr_t target_ip;
-    
     //rboot setup
     rboot_config conf;
     conf = rboot_get_config();
@@ -124,7 +119,6 @@ void ota_init(char* repo, const bool is_ssl) {
         conf.current_rom = 0;
         rboot_set_config(&conf);
     }
-    
     if (is_ssl) {
 /*
         // Time support
@@ -134,25 +128,20 @@ void ota_init(char* repo, const bool is_ssl) {
         sntp_initialize(NULL);
         sntp_set_servers(servers, sizeof(servers) / sizeof(char*));     // Servers must be configured right after initialization
 */
-        
 #ifdef DEBUG_WOLFSSL
         if (wolfSSL_SetLoggingCb(MyLoggingCallback)) {
             printf("error setting debug callback\n");
         }
 #endif
-        
         wolfSSL_Init();
 
         ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
 //        if (!ctx) {
 //           error
 //        }
-       
         wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
     }
-    
     printf("DNS check result  = ");
-    
     ota_get_host(repo);
     if (netconn_gethostbyname(last_host, &target_ip)) {
         printf("ERROR\n");
@@ -174,21 +163,17 @@ static int ota_connect(char* host, uint16_t port, int *socket, WOLFSSL** ssl, co
     struct sockaddr_in sock_addr;
     unsigned char initial_port[2];
     WC_RNG rng;
-    
     if (!local_port) {
         wc_RNG_GenerateBlock(&rng, initial_port, 2);
         local_port = (256 * initial_port[0] + initial_port[1]) | 0xc000;
     }
-    
     printf("%04x DNS..", local_port);
-    
     ret = netconn_gethostbyname(host, &target_ip);
     if (ret) {
         printf(FAILED);
         return -2;
     }
     printf("OK ");
-    
     printf("IP addr: %d.%d.%d.%d ", (unsigned char) ((target_ip.addr & 0x000000ff) >> 0),
                                     (unsigned char) ((target_ip.addr & 0x0000ff00) >> 8),
                                     (unsigned char) ((target_ip.addr & 0x00ff0000) >> 16),
@@ -208,7 +193,6 @@ static int ota_connect(char* host, uint16_t port, int *socket, WOLFSSL** ssl, co
     if (local_port == 0x10000) {
         local_port = 0xc000;
     }
-    
     ret = bind(*socket, (struct sockaddr*) &sock_addr, sizeof(sock_addr));
     if (ret) {
         printf(FAILED);
@@ -231,7 +215,6 @@ static int ota_connect(char* host, uint16_t port, int *socket, WOLFSSL** ssl, co
     if (is_ssl) {   // SSL mode
         printf("SSL..");
         *ssl = wolfSSL_new(ctx);
-        
         if (!*ssl) {
             printf(FAILED);
             return -2;
@@ -256,9 +239,7 @@ static int ota_connect(char* host, uint16_t port, int *socket, WOLFSSL** ssl, co
         }
         printf("OK");
     }
-    
     printf("\n");
-    
     return 0;
 }
 
@@ -269,18 +250,15 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
     WOLFSSL* ssl;
     int socket;
     char recv_buf[RECV_BUF_LEN];
-    
     char* location;
 
     ota_get_host(repo);
     ota_get_location(repo);
-    
     if (strlen(last_location) > 0) {
         strcat(strcat(last_location, "/"), file);
     } else {
         strcat(last_location, file);
     }
-    
     uint8_t i = 0;
     while (i < MAX_302_JUMPS) {
         i++;
@@ -294,12 +272,10 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
                                             RANGE),
                                             "0-1"),
                                             CRLFCRLF);
-        
         uint16_t send_bytes = strlen(recv_buf);
         printf("-----\n%s-----\n", recv_buf);
 
         retc = ota_connect(last_host, port, &socket, &ssl, is_ssl);  //release socket and ssl when ready
-        
         if (!retc) {
             if (is_ssl) {
                 ret = wolfSSL_write(ssl, recv_buf, send_bytes);
@@ -311,16 +287,13 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
                 printf("sent OK\n");
 
                 //wolfSSL_shutdown(ssl); //by shutting down the connection before even reading, we reduce the payload to the minimum
-                
                 if (is_ssl) {
                     ret = wolfSSL_read(ssl, recv_buf, RECV_BUF_LEN - 1);
                     //ret = wolfSSL_peek(ssl, recv_buf, RECV_BUF_LEN - 1);
                 } else {
                     ret = lwip_read(socket, recv_buf, RECV_BUF_LEN - 1);
                 }
-                
                 printf("ret = %i\n", ret);
-                
                 if (ret > 0) {
                     recv_buf[ret] = 0; // Error checking, e.g. not result = 206
                     printf("\n%s\n\n", recv_buf);
@@ -331,7 +304,6 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
                         printf("HTTP returns %d\n\n", slash);
                         if (slash == 200 || slash == 206) {
                             i = MAX_302_JUMPS;
-                            
                         } else if (slash == 302) {
                             location = strstr_lc(recv_buf, "\nlocation:");
                             if (location) {
@@ -339,18 +311,15 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
                                 if (location[10] == ' ') {
                                     location++;
                                 }
-                                
                                 location = strstr(location , "//");
                                 location += 2; // Flush: //
 
                                 ota_get_host(location);
                                 ota_get_location(location);
-                                
                             } else {
                                 i = MAX_302_JUMPS;
                                 ret = -1;
                             }
-                            
                         } else {
                             i = MAX_302_JUMPS;
                             ret = -2;
@@ -389,7 +358,6 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
             default:
             ;
         }
-    
     }
 
     if (retc) {
@@ -401,7 +369,6 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
 
 static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int bufsz, uint16_t port, const bool is_ssl) { //number of bytes
     printf("\nDOWNLOADING FILE\n\n");
-    
     int retc, ret = 0;
     WOLFSSL* ssl;
     int socket;
@@ -418,29 +385,22 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
     if (sector == 0 && buffer == NULL) {
         return -5;      // Needs to be either a sector or a signature/version file
     }
-    
     if (ota_get_final_location(repo, file, port, is_ssl) <= 0) {
         printf("!!! SERVER ERROR\n");
         return -1;
     }
-    
     printf("FINAL location: %s/%s\n\n", last_host, last_location);
-    
     retc = ota_connect(last_host, port, &socket, &ssl, is_ssl);  //release socket and ssl when ready
-    
     if (!retc) {
         const uint16_t getlinestart_len = 38 + strlen(last_location) + strlen(last_host);
-        
         char *getlinestart = malloc(getlinestart_len);
         snprintf(getlinestart, getlinestart_len, REQUESTHEAD"%s"REQUESTTAIL"%s"RANGE,
                  last_location,
                  last_host);
 
         char *location;
-        
         while (collected < length) {
             sprintf(recv_buf, "%s%d-%d%s", getlinestart, collected, collected + 4095, CRLFCRLF);
-            
             send_bytes = strlen(recv_buf);
 
             if (is_ssl) {
@@ -448,9 +408,7 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
             } else {
                 ret = lwip_write(socket, recv_buf, send_bytes);
             }
-            
             recv_bytes = 0;
-            
             if (ret > 0) {
                 header = 1;
                 memset(recv_buf, 0, RECV_BUF_LEN);
@@ -483,12 +441,9 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                                 location += 15; // Flush Content-Range:
                                 location = strstr_lc(recv_buf, "bytes ");
                                 location += 6; // bytes
-                                
                                 location = strstr(location, "/");
                                 location++; // Flush /
-                                
                                 length = atoi(location);
-                                
                                 location[strlen(location)] = '\r'; // Search the entire buffer again
                             } else if (buffer) {
                                 length = clength;
@@ -497,7 +452,6 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                                 length = 0;
                                 break;
                             }
-                            
                             location = strstr(recv_buf, CRLFCRLF) + 4; // Go to end of header
                             if ((left = ret - (location - recv_buf))) {
                                 header = 0; // We have body in the same IP packet as the header so we need to process it already
@@ -505,7 +459,6 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                                 memmove(recv_buf, location, left); // Move this payload to the head of the recv_buf
                             }
                         }
-                        
                         if (!header) {
                             recv_bytes += ret;
                             if (sector) { // Write to flash
@@ -527,32 +480,24 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                             }
                             collected += ret;
                         }
-                        
                     } else {
                         if (ret && is_ssl) {
                             ret = wolfSSL_get_error(ssl, ret);
                             printf("! %d\n", ret);
                         }
-                        
                         if (!ret && collected < length)
                             retc = ota_connect(last_host, port, &socket, &ssl, is_ssl);
-                        
                         break;
                     }
-                    
                     header = 0; // Move to header section itself
                 } while (recv_bytes < clength);
-                
                 printf(" Downloaded %d Bytes\n", collected);
-                
             } else {
                 printf("failed, return [-0x%x]\n", -ret);
-                
                 if (is_ssl) {
                     ret = wolfSSL_get_error(ssl, ret);
                     printf("wolfSSL_send error = %d\n", ret);
                 }
-                
                 if (ret == -308) {
                     retc = ota_connect(last_host, port, &socket, &ssl, is_ssl); //dangerous for eternal connecting? memory leak?
                 } else {
@@ -560,14 +505,11 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                 }
             }
         }
-        
         free(getlinestart);
     } else {
         printf(FAILED);
     }
-    
     printf("\n");
-    
     switch (retc) {
         case 0:
         case -1:
@@ -586,7 +528,6 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
 
 int ota_get_file(char* repo, char* file, int sector, uint16_t port, const bool is_ssl) {
     printf("Get file from %s\n", repo);
-    
     return ota_get_file_ex(repo, file, sector, NULL, 0, port, is_ssl);
 }
 
@@ -596,14 +537,11 @@ char* ota_get_version(char* repo, char* version_file, uint16_t port, const bool 
     byte* version = malloc(VERSIONFILESIZE + 1);
     memset(version, 0, VERSIONFILESIZE + 1);
 
-    if (ota_get_file_ex(repo, version_file, 0, version, VERSIONFILESIZE, port, is_ssl)) {
-        printf("VERSION of %s: %s\n", version_file, (char*) version);
-    } else {
+    if (!ota_get_file_ex(repo, version_file, 0, version, VERSIONFILESIZE, port, is_ssl)) {
         free(version);
         version = NULL;
         printf("ERROR\n");
     }
-    
     return (char*) version;
 }
 
@@ -616,18 +554,15 @@ int ota_get_sign(char* repo, char* file, byte* signature, uint16_t port, bool is
     memset(signature, 0, SIGNSIZE);
     ret = ota_get_file_ex(repo, signame, 0, signature, SIGNSIZE, port, is_ssl);
     free(signame);
-    
     return ret;
 }
 
 int ota_verify_sign(int start_sector, int filesize, byte* signature) {
     printf("Verifying sign...\n");
-    
     int bytes;
     byte hash[HASHSIZE];
     byte buffer[1024];
     Sha384 sha;
-    
     wc_InitSha384(&sha);
 
     for (bytes = 0; bytes < filesize - 1024; bytes += 1024) {
@@ -635,24 +570,19 @@ int ota_verify_sign(int start_sector, int filesize, byte* signature) {
             printf("! Reading flash\n");
             break;
         }
-        
         if (bytes == 0) {
             buffer[0] = file_first_byte[0];
         }
-        
         wc_Sha384Update(&sha, buffer, 1024);
     }
 
     if (!spiflash_read(start_sector + bytes, (byte*) buffer, filesize - bytes)) {
         printf("! Reading flash\n");
     }
-    
     wc_Sha384Update(&sha, buffer, filesize - bytes);
     wc_Sha384Final(&sha, hash);
-    
     int verify = 0;
     wc_ecc_verify_hash(signature, SIGNSIZE, hash, HASHSIZE, &verify, &public_key);
-    
     printf("Sign result: %s (%d)\n", verify == 1 ? "OK" : "ERROR" , verify);
 
     return verify - 1;

@@ -107,19 +107,33 @@ void ota_task(void *arg) {
                 free(ota_version);
                 ota_version = NULL;
             }
+
             ota_version = ota_get_version(user_repo, OTAVERSIONFILE, port, is_ssl);
-            if (ota_version && strcmp(ota_version, OTAVERSION) != 0) {
+            char* stored_ota_version;
+            int compare_ota_version;
+            status = sysparam_get_string(OTA_VERSION_SYSPARAM, &stored_ota_version);
+            if (status == SYSPARAM_OK) {
+                compare_ota_version = strcmp(ota_version, stored_ota_version);
+                printf("\n*** Server version: [%s], local version [%s]\n\n", ota_version, stored_ota_version);
+                free(stored_ota_version);
+            } else {
+                printf("\n*** Server version: [%s], local version [%s] *\n\n", ota_version, OTAVERSION);
+                compare_ota_version = strcmp(ota_version, OTAVERSION);
+            }
+
+            if (ota_version && compare_ota_version != 0) {
                 if (ota_get_sign(user_repo, OTABOOTFILE, signature, port, is_ssl) > 0) {
                     file_size = ota_get_file(user_repo, OTABOOTFILE, BOOT0SECTOR, port, is_ssl);
                     if (file_size > 0 && ota_verify_sign(BOOT0SECTOR, file_size, signature) == 0) {
                         ota_finalize_file(BOOT0SECTOR);
-                        printf("\n*** HAABOOT new version installed\n\n");
+                        sysparam_set_string(OTA_VERSION_SYSPARAM, ota_version);
+                        printf("\n*** HAABOOT v%s installed\n\n", ota_version);
                     } else {
-                        printf("\n!!! Error installing HAABOOT new version\n\n");
+                        printf("\n!!! Error installing HAABOOT\n\n");
                     }
                     break;
                 } else {
-                    printf("\n!!! Error downloading HAABOOT new version signature\n\n");
+                    printf("\n!!! Error downloading HAABOOT signature\n\n");
                 }
             }
             if (new_version) {
@@ -127,6 +141,7 @@ void ota_task(void *arg) {
                 new_version = NULL;
             }
             new_version = ota_get_version(user_repo, HAAVERSIONFILE, port, is_ssl);
+            printf("\n*** Server version: [%s], local version [%s]\n\n", new_version, user_version);
             if (new_version && strcmp(new_version, user_version) != 0) {
                 if (ota_get_sign(user_repo, HAAMAINFILE, signature, port, is_ssl) > 0) {
                     file_size = ota_get_file(user_repo, HAAMAINFILE, BOOT0SECTOR, port, is_ssl);

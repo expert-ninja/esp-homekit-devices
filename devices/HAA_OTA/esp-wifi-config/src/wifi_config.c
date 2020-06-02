@@ -849,7 +849,15 @@ static void auto_reboot_run() {
 
 static uint8_t wifi_config_connect() {
     char *wifi_ssid = NULL;
-    sysparam_set_string(OTA_VERSION_SYSPARAM, OTAVERSION);
+
+    sysparam_status_t status;
+    char* stored_ota_version;
+    status = sysparam_get_string(OTA_VERSION_SYSPARAM, &stored_ota_version);
+    if (status == SYSPARAM_OK) {
+        free(stored_ota_version);
+    } else {
+        sysparam_set_string(OTA_VERSION_SYSPARAM, OTAVERSION);
+    }
 
     sysparam_get_string(WIFI_SSID_SYSPARAM, &wifi_ssid);
 
