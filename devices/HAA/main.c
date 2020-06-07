@@ -74,7 +74,7 @@ pwm_info_t* pwm_info;
 uint16_t multipwm_duty[MULTIPWM_MAX_CHANNELS];
 uint16_t pwm_freq = 0;
 
-char name_value[11];
+char name_value[12];
 char serial_value[13];
 
 ETSTimer* ping_task_timer;
@@ -3477,7 +3477,7 @@ void normal_mode_init() {
         INFO("Init State: %i", initial_state);
         return initial_state;
     }
-    
+
     void acc_creation_delay(cJSON* json_accessory) {
         if (cJSON_GetObjectItemCaseSensitive(json_accessory, ACC_CREATION_DELAY) != NULL) {
             vTaskDelay(MS_TO_TICK((uint16_t) cJSON_GetObjectItemCaseSensitive(json_accessory, ACC_CREATION_DELAY)->valuedouble));
@@ -4885,7 +4885,7 @@ void user_init(void) {
 
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
-    snprintf(name_value, 11, "ESPY-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+    snprintf(name_value, 12, "ESPY-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     name.value = HOMEKIT_STRING(name_value);
     int8_t haa_setup = 0;
     //sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 2);            // Force to enter always in setup mode. Only for tests. Keep comment for releases
