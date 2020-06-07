@@ -11,20 +11,14 @@
  *
  */
 
-//#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <esp/uart.h>
-//#include <esp8266.h>
-//#include <FreeRTOS.h>
-//#include <espressif/esp_wifi.h>
 #include <espressif/esp_common.h>
 #include <rboot-api.h>
 #include <sysparam.h>
-//#include <task.h>
 #include <math.h>
 
-//#include <etstimer.h>
 #include <esplibs/libmain.h>
 
 #include "lwip/err.h"
@@ -2642,7 +2636,9 @@ void normal_mode_init() {
     const uint8_t total_accessories = cJSON_GetArraySize(json_accessories);
     if (total_accessories == 0) {
         uart_set_baud(0, 115200);
-        printf("\n\n\n! Invalid JSON\n");
+        printf_header();
+        printf("JSON:\n %s\n\n\n", txt_config);
+        printf("! Invalid JSON\n");
         sysparam_set_int8(TOTAL_ACC_SYSPARAM, 0);
         sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 2);
         xTaskCreate(reboot_task, "reboot_task", REBOOT_TASK_SIZE, NULL, 1, NULL);
@@ -3481,8 +3477,14 @@ void normal_mode_init() {
         INFO("Init State: %i", initial_state);
         return initial_state;
     }
+    
+    void acc_creation_delay(cJSON* json_accessory) {
+        if (cJSON_GetObjectItemCaseSensitive(json_accessory, ACC_CREATION_DELAY) != NULL) {
+            vTaskDelay(MS_TO_TICK((uint16_t) cJSON_GetObjectItemCaseSensitive(json_accessory, ACC_CREATION_DELAY)->valuedouble));
+        }
+    }
 
-    uint8_t new_switch(uint8_t accessory, cJSON *json_context, const uint8_t acc_type) {
+    uint8_t new_switch(uint8_t accessory, cJSON* json_context, const uint8_t acc_type) {
         new_accessory(accessory, 3);
         homekit_characteristic_t *ch0 = NEW_HOMEKIT_CHARACTERISTIC(ON, false, .setter_ex=hkc_on_setter);
         uint32_t max_duration = 0;
@@ -4815,6 +4817,11 @@ void normal_mode_init() {
             acc_count = new_switch(acc_count, json_accessory, acc_type);
         }
         setup_mode_toggle_counter = INT8_MIN;
+
+        FREEHEAP();
+
+        acc_creation_delay(json_accessory);
+
         taskYIELD();
     }
     sysparam_set_int8(TOTAL_ACC_SYSPARAM, hk_total_ac);

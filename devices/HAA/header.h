@@ -48,15 +48,15 @@
 // Task Stack Sizes                         configMINIMAL_STACK_SIZE = 256
 #define INITIAL_SETUP_TASK_SIZE             (configMINIMAL_STACK_SIZE * 4)
 #define LED_TASK_SIZE                       (configMINIMAL_STACK_SIZE * 1)
-#define REBOOT_TASK_SIZE                    (configMINIMAL_STACK_SIZE * 2)
+#define REBOOT_TASK_SIZE                    (configMINIMAL_STACK_SIZE * 1.5)
 #define PING_TASK_SIZE                      (configMINIMAL_STACK_SIZE * 2)
-#define AUTOSWITCH_TASK_SIZE                (configMINIMAL_STACK_SIZE * 2)
-#define AUTOOFF_SETTER_TASK_SIZE            (configMINIMAL_STACK_SIZE * 2)
+#define AUTOSWITCH_TASK_SIZE                (configMINIMAL_STACK_SIZE * 1.5)
+#define AUTOOFF_SETTER_TASK_SIZE            (configMINIMAL_STACK_SIZE * 1.5)
 #define AUTODIMMER_TASK_SIZE                (configMINIMAL_STACK_SIZE * 1)
 #define IR_TX_TASK_SIZE                     (configMINIMAL_STACK_SIZE * 2)
-#define UART_ACTION_TASK_SIZE               (configMINIMAL_STACK_SIZE * 2)
+#define UART_ACTION_TASK_SIZE               (configMINIMAL_STACK_SIZE * 1.5)
 #define HTTP_GET_TASK_SIZE                  (configMINIMAL_STACK_SIZE * 2)
-#define DELAYED_SENSOR_START_TASK_SIZE      (configMINIMAL_STACK_SIZE * 2)
+#define DELAYED_SENSOR_START_TASK_SIZE      (configMINIMAL_STACK_SIZE * 1.5)
 #define TEMPERATURE_TASK_SIZE               (configMINIMAL_STACK_SIZE * 2)
 
 // Task Priorities
@@ -363,7 +363,7 @@
 #define ACC_POWER_MONITOR_INIT              75
 #define ACC_POWER_MONITOR_END               82
 
-#define ACC_CREATION_DELAY                  30
+#define ACC_CREATION_DELAY                  "cd"
 #define EXIT_EMERGENCY_SETUP_MODE_TIME      2200
 #define SETUP_MODE_ACTIVATE_COUNT           "z"
 #define SETUP_MODE_DEFAULT_ACTIVATE_COUNT   8
