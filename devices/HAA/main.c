@@ -4842,7 +4842,7 @@ void normal_mode_init() {
     // --- HOMEKIT SET CONFIG
     serial.value = name.value;
     config.accessories = accessories;
-    config.setupId = "JOSE";
+    config.setupId = "ESPY";
     config.category = homekit_accessory_category_other;
     config.config_number = FIRMWARE_VERSION_OCTAL;
     config.log_output = (bool) log_output_type;

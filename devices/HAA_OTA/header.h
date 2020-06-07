@@ -14,7 +14,7 @@
 #ifndef __HAA_OTA_HEADER_H__
 #define __HAA_OTA_HEADER_H__
 
-#define OTAVERSION              "3.1.5"
+#define OTAVERSION              "1.0.1"
 
 #define CUSTOM_REPO_SYSPARAM    "ota_server"
 #define PORT_NUMBER_SYSPARAM    "ota_port"
