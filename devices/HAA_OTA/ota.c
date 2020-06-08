@@ -14,6 +14,7 @@
  *
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -59,29 +60,12 @@ static int local_port = 0;
 static char last_host[HOST_LEN];
 static char last_location[RECV_BUF_LEN];
 
-#ifdef DEBUG_WOLFSSL    
+#ifdef DEBUG_WOLFSSL
 void MyLoggingCallback(const int logLevel, const char* const logMessage) {
     /*custom logging function*/
     printf("loglevel: %d - %s\n", logLevel, logMessage);
 }
 #endif
-
-static char *strstr_lc(const char *full_string, const char *search) {
-    char *lc_string = strdup(full_string);
-
-    unsigned char *ch = (unsigned char *) lc_string;
-    while (*ch) {
-        *ch = tolower(*ch);
-        ch++;
-    }
-    char *found = strstr(lc_string, search);
-    free(lc_string);
-    if (found == NULL) {
-        return NULL;
-    }
-    const int offset = (uint32_t) found - (uint32_t) lc_string;
-    return (char *) ((uint32_t) full_string + offset);
-}
 
 static void ota_get_host(const char* repo) {
     memset(last_host, 0, HOST_LEN);
@@ -297,16 +281,16 @@ static int ota_get_final_location(char* repo, char* file, uint16_t port, const b
                 if (ret > 0) {
                     recv_buf[ret] = 0; // Error checking, e.g. not result = 206
                     printf("\n%s\n\n", recv_buf);
-                    location = strstr_lc(recv_buf, "http/1.1 ");
-                    if (location) {
+                    location = strcasestr(recv_buf, "http/1.1 ");
+                    if (location != NULL) {
                         location += 9; // Flush "HTTP/1.1 "
                         slash = atoi(location);
                         printf("HTTP returns %d\n\n", slash);
                         if (slash == 200 || slash == 206) {
                             i = MAX_302_JUMPS;
                         } else if (slash == 302) {
-                            location = strstr_lc(recv_buf, "\nlocation:");
-                            if (location) {
+                            location = strcasestr(recv_buf, "\nlocation:");
+                            if (location != NULL) {
                                 strchr(location, '\r')[0] = 0;
                                 if (location[10] == ' ') {
                                     location++;
@@ -424,8 +408,8 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                         if (header) {
                             //printf("%s\n-------- %d\n", recv_buf, ret);
                             // Parse Content-Length: xxxx
-                            location = strstr_lc(recv_buf, "\ncontent-length:");
-                            if (!location) {
+                            location = strcasestr(recv_buf, "\ncontent-length:");
+                            if (location == NULL) {
                                 printf("\n!!! ERROR No content-length found\n\n");
                                 length = 0;
                                 break;
@@ -435,11 +419,11 @@ static int ota_get_file_ex(char* repo, char* file, int sector, byte* buffer, int
                             clength = atoi(location);
                             location[strlen(location)] = '\r'; // In case the order changes
                             // Parse Content-Range: bytes xxxx-yyyy/zzzz
-                            location = strstr_lc(recv_buf, "\ncontent-range:");
-                            if (location) {
+                            location = strcasestr(recv_buf, "\ncontent-range:");
+                            if (location != NULL) {
                                 strchr(location,'\r')[0] = 0;
                                 location += 15; // Flush Content-Range:
-                                location = strstr_lc(recv_buf, "bytes ");
+                                location = strcasestr(recv_buf, "bytes ");
                                 location += 6; // bytes
                                 location = strstr(location, "/");
                                 location++; // Flush /
