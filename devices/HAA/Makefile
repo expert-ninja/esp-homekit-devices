@@ -3,16 +3,16 @@ PROGRAM = haamain
 
 EXTRA_COMPONENTS = \
 	$(abspath setup_mode) \
-    extras/onewire \
-    extras/ds18b20 \
-    extras/multipwm \
+	extras/onewire \
+	extras/ds18b20 \
+	extras/multipwm \
 	extras/http-parser \
 	extras/dhcpserver \
 	extras/rboot-ota \
-    $(abspath ../../external_libs/wolfssl) \
-    $(abspath ../../external_libs/cJSON) \
-    $(abspath ../../external_libs/homekit) \
-    $(abspath ../../libs/adv_button) \
+	$(abspath ../../external_libs/esp-wolfssl) \
+	$(abspath ../../external_libs/cJSON) \
+	$(abspath ../../external_libs/homekit) \
+	$(abspath ../../libs/adv_button) \
 	$(abspath ../../libs/new_dht) \
 	$(abspath ../../libs/ping) \
 	$(abspath ../../libs/adv_logger)
