@@ -2617,9 +2617,7 @@ void run_homekit_server() {
 }
 
 void printf_header() {
-    printf("\n\n\n");
-    printf("Espy House v%s\n", FIRMWARE_VERSION);
-    printf("Developed by Expert Ninja\n\n");
+    printf("*******************************\n* ESPY House %s\n*******************************\n\n", FIRMWARE_VERSION);
 #ifdef HAA_DEBUG
     printf("HAA DEBUG ENABLED\n\n");
 #endif  // HAA_DEBUG

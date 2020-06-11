@@ -5,7 +5,8 @@ EXTRA_COMPONENTS = \
 	extras/sntp \
 	extras/http-parser \
 	extras/dhcpserver \
-    extras/rboot-ota \
+	extras/rboot-ota \
+	$(abspath ../../libs/form_urlencoded) \
 	$(abspath esp-wifi-config) \
 	$(abspath ../../external_libs/esp-wolfssl) \
 	$(abspath ../../libs/adv_logger)
@@ -43,6 +44,7 @@ EXTRA_WOLFSSL_CFLAGS = \
 	-DHAVE_ECC_VERIFY \
 	-DHAVE_ECC_KEY_IMPORT \
 #	-DDEBUG_WOLFSSL \
+#	-DDEBUG_HTTP \
 #	-DNO_SHA \
 #	-DLARGE_STATIC_BUFFERS \
 #	-DSTATIC_CHUNKS_ONLY \

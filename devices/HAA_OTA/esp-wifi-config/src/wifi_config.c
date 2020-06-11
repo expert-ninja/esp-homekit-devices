@@ -29,7 +29,7 @@
 #include <http-parser/http_parser.h>
 #include <dhcpserver.h>
 
-#include "form_urlencoded.h"
+#include <form_urlencoded.h>
 
 #include <rboot-api.h>
 
@@ -252,42 +252,11 @@ static void wifi_config_server_on_settings(client_t *client) {
 
     // Repository server
     int8_t int8_value = 0;
-    int32_t int32_value;
 
     status = sysparam_get_string(CUSTOM_REPO_SYSPARAM, &text);
     if (status == SYSPARAM_OK) {
-        status = sysparam_get_int8(PORT_SECURE_SYSPARAM, &int8_value);
-        if (status != SYSPARAM_OK || (status == SYSPARAM_OK && int8_value == 1)) {
-            int8_value = 1;
-            client_send_chunk(client, "https://");
-        } else {
-            client_send_chunk(client, "http://");
-        }
-
-        char* slash = strchr(text, '/');
-        if (slash != NULL) *slash = 0;
-
         client_send_chunk(client, text);
-
-        status = sysparam_get_int32(PORT_NUMBER_SYSPARAM, &int32_value);
-        if (status == SYSPARAM_OK) {
-            if ( ((int8_value == 0) && (int32_value != 80)) ||
-               ((int8_value == 1) && (int32_value != 443)) )
-            {
-                char str_port[6];
-                itoa(int32_value, str_port, 10);
-                client_send_chunk(client, ":");
-                client_send_chunk(client, str_port);
-            }
-        }
-
-        if (slash != NULL) {
-            *slash = '/';
-            client_send_chunk(client, slash);
-        }
-
         free(text);
-        text = NULL;
     }
     client_send_chunk(client, html_settings_reposerver);
 
@@ -416,68 +385,11 @@ static void wifi_config_server_on_settings_update_task(void* args) {
     if (reposerver_param && reposerver_param->value) {
         struct http_parser_url u;
         char* decoded_url;
-        char* server_schema = NULL;
-        char* server_host = NULL;
-        char* server_path = NULL;
-        int32_t server_port = 0;
 
         decoded_url = url_unescape(reposerver_param->value, strlen(reposerver_param->value));
         http_parser_url_init(&u);
         if (!http_parser_parse_url(decoded_url, strlen(decoded_url), 0, &u)) {
-            if ((u.field_set & (1 << UF_SCHEMA))) {
-                server_schema = malloc(u.field_data[UF_SCHEMA].len + 1);
-                strncpy(server_schema, reposerver_param->value + u.field_data[UF_SCHEMA].off, u.field_data[UF_SCHEMA].len);
-                server_schema[u.field_data[UF_SCHEMA].len] = 0;
-            }
-
-            if ((u.field_set & (1 << UF_HOST))) {
-                server_host = malloc(u.field_data[UF_HOST].len + 1);
-                strncpy(server_host, reposerver_param->value + u.field_data[UF_HOST].off, u.field_data[UF_HOST].len);
-                server_host[u.field_data[UF_HOST].len] = 0;
-            }
-
-            if ((u.field_set & (1 << UF_PATH))) {
-                server_path = malloc(u.field_data[UF_PATH].len + 1);
-                strncpy(server_path, reposerver_param->value + u.field_data[UF_PATH].off, u.field_data[UF_PATH].len);
-                server_path[u.field_data[UF_PATH].len] = 0;
-            }
-
-            if ((u.field_set & (1 << UF_PORT))) server_port = u.port;
-
-            if (server_host != NULL) {
-                if (server_path != NULL) {
-                    uint16_t server_host_len = strlen(server_host);
-                    uint16_t server_path_len = strlen(server_path);
-
-                    char* server_host_path = malloc(server_host_len + server_path_len + 1);
-                    strncpy(server_host_path, server_host, server_host_len);
-                    strncpy(server_host_path + server_host_len, server_path, server_path_len);
-                    server_host_path[server_host_len + server_path_len] = 0;
-                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, server_host_path);
-                    free(server_host_path);
-                    free(server_path);
-                } else {
-                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, server_host);
-                }
-                free(server_host);
-
-                if (server_schema != NULL) {
-                    if (!strcmp(server_schema, "https")) {
-                        sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
-                        if (server_port == 0) server_port = 443;
-                    } else {
-                        sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
-                        if (server_port == 0) server_port = 80;
-                    }
-                    free(server_schema);
-                } else {
-                    sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
-                    if (server_port == 0) server_port = 443;
-                }
-                sysparam_set_int32(PORT_NUMBER_SYSPARAM, server_port);
-            } else { // host not found
-                sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
-            }
+            sysparam_set_string(CUSTOM_REPO_SYSPARAM, decoded_url);
         } else { // parsing failed
             sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
         }
