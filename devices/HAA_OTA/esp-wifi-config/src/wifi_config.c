@@ -388,11 +388,13 @@ static void wifi_config_server_on_settings_update_task(void* args) {
 
         decoded_url = url_unescape(reposerver_param->value, strlen(reposerver_param->value));
         http_parser_url_init(&u);
+
         if (!http_parser_parse_url(decoded_url, strlen(decoded_url), 0, &u)) {
             sysparam_set_string(CUSTOM_REPO_SYSPARAM, decoded_url);
         } else { // parsing failed
             sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
         }
+
         free(decoded_url);
     } else { // empty string
         sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");

@@ -45,6 +45,7 @@
 #include <homekit/characteristics.h>
 #include <homekit/tlv.h>
 
+#include <form_urlencoded.h>
 
 #define PORT 5556
 
@@ -671,7 +672,7 @@ int client_decrypt(
     size_t required_decrypted_size = payload_size / block_size * 1024;
     if (payload_size % block_size > 0)
         required_decrypted_size += payload_size % block_size - 16 - 2;
-    
+
     if (*decrypted_size < required_decrypted_size) {
         *decrypted_size = required_decrypted_size;
         return -2;
@@ -1029,7 +1030,7 @@ void homekit_server_on_pair_setup(client_context_t *context, const byte *data, s
 #endif
 
     is_pairing = true;
-    
+
     tlv_values_t *message = tlv_new();
     tlv_parse(data, size, message);
 
@@ -1513,7 +1514,7 @@ void homekit_server_on_pair_setup(client_context_t *context, const byte *data, s
     }
 
     is_pairing = false;
-    
+
     tlv_free(message);
 
 #ifdef HOMEKIT_OVERCLOCK_PAIR_SETUP
@@ -1967,7 +1968,7 @@ void homekit_server_on_get_accessories(client_context_t *context) {
 #ifdef HOMEKIT_OVERCLOCK_GET_ACC
     sdk_system_overclock();
 #endif
-    
+
     client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
 
     json_stream *json = json_new(1024, client_send_chunk, context);
@@ -2029,7 +2030,7 @@ void homekit_server_on_get_accessories(client_context_t *context) {
 
     json_flush(json);
     json_free(json);
-    
+
     client_send_chunk(NULL, 0, context);
 
 #ifdef HOMEKIT_OVERCLOCK_GET_ACC
@@ -2049,7 +2050,11 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
 
     query_param_t *qp = context->endpoint_params;
     while (qp) {
-        CLIENT_INFO(context, "Query parameter %s = %s", qp->name, qp->value);
+        if (qp->value == NULL) {
+            CLIENT_INFO(context, "Query parameter %s is empty", qp->name);
+        } else {
+            CLIENT_INFO(context, "Query parameter %s = %s", qp->name, qp->value);
+        }
         if (!strcmp(qp->name, "autoota")) {
             if (!strcmp(qp->value, "1")) {
                 sysparam_set_bool(AUTO_OTA_SYSPARAM, true);
@@ -2058,17 +2063,21 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
             }
         }
         if (!strcmp(qp->name, "reposerver")) {
-            sysparam_set_string(CUSTOM_REPO_SYSPARAM, qp->value);
-        }
-        if (!strcmp(qp->name, "repoport")) {
-            const int32_t port = strtol(qp->value, NULL, 10);
-            sysparam_set_int32(PORT_NUMBER_SYSPARAM, port);
-        }
-        if (!strcmp(qp->name, "repossl")) {
-            if (!strcmp(qp->value, "1")) {
-                sysparam_set_int8(PORT_SECURE_SYSPARAM, 1);
+            if (qp->value == NULL) {
+                sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
             } else {
-                sysparam_set_int8(PORT_SECURE_SYSPARAM, 0);
+                char* decoded_url = url_unescape(qp->value, strlen(qp->value));
+
+                struct http_parser_url u;
+                http_parser_url_init(&u);
+
+                if (!http_parser_parse_url(decoded_url, strlen(decoded_url), 0, &u)) {
+                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, decoded_url);
+                } else { // parsing failed
+                    sysparam_set_string(CUSTOM_REPO_SYSPARAM, "");
+                }
+
+                free(decoded_url);
             }
         }
         if (!strcmp(qp->name, "reset_main")) {
@@ -2150,7 +2159,7 @@ void homekit_server_on_get_characteristics(client_context_t *context) {
 #ifdef HOMEKIT_OVERCLOCK_GET_CH
     sdk_system_overclock();
 #endif
-    
+
     query_param_t *qp = context->endpoint_params;
     while (qp) {
         CLIENT_DEBUG(context, "Query paramter %s = %s", qp->name, qp->value);
@@ -2161,11 +2170,11 @@ void homekit_server_on_get_characteristics(client_context_t *context) {
     if (!id_param) {
         CLIENT_ERROR(context, "Invalid get characteristics request: missing ID parameter");
         send_json_error_response(context, 400, HAPStatus_InvalidValue);
-        
+
 #ifdef HOMEKIT_OVERCLOCK_GET_CH
         sdk_system_restoreclock();
 #endif
-        
+
         return;
     }
 
@@ -2197,11 +2206,11 @@ void homekit_server_on_get_characteristics(client_context_t *context) {
         if (!dot) {
             send_json_error_response(context, 400, HAPStatus_InvalidValue);
             free(id);
-            
+
 #ifdef HOMEKIT_OVERCLOCK_GET_CH
             sdk_system_restoreclock();
 #endif
-            
+
             return;
         }
 
@@ -2277,9 +2286,9 @@ void homekit_server_on_get_characteristics(client_context_t *context) {
     json_free(json);
 
     client_send_chunk(NULL, 0, context);
-    
+
     free(id);
-    
+
 #ifdef HOMEKIT_OVERCLOCK_GET_CH
     sdk_system_restoreclock();
 #endif
@@ -2292,7 +2301,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
     sdk_system_overclock();
 #endif
-    
+
     char *data1 = strndup((char *)data, size);
     cJSON *json = cJSON_Parse(data1);
     free(data1);
@@ -2300,11 +2309,11 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
     if (!json) {
         CLIENT_ERROR(context, "Failed to parse request JSON");
         send_json_error_response(context, 400, HAPStatus_InvalidValue);
-        
+
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
         sdk_system_restoreclock();
 #endif
-        
+
         return;
     }
 
@@ -2313,23 +2322,23 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
         CLIENT_ERROR(context, "Failed to parse request: no \"characteristics\" field");
         cJSON_Delete(json);
         send_json_error_response(context, 400, HAPStatus_InvalidValue);
-        
+
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
         sdk_system_restoreclock();
 #endif
-                
+
         return;
     }
-    
+
     if (characteristics->type != cJSON_Array) {
         CLIENT_ERROR(context, "Failed to parse request: \"characteristics\" field is not an list");
         cJSON_Delete(json);
         send_json_error_response(context, 400, HAPStatus_InvalidValue);
-        
+
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
         sdk_system_restoreclock();
 #endif
-                
+
         return;
     }
 
@@ -2460,7 +2469,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
                         min_value = *ch->min_value;
                     if (ch->max_value)
                         max_value = *ch->max_value;
-                    
+
                     double value = j_value->valuedouble;
                     if (j_value->type == cJSON_True) {
                         value = 1;
@@ -2468,7 +2477,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
                         value = 0;
                     }
                     */
-                    
+
                     if (value < min_value || value > max_value) {
                         CLIENT_ERROR(context, "Failed to update %d.%d: value is not in range", aid, iid);
                         return HAPStatus_InvalidValue;
@@ -2510,7 +2519,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
                     // Old style
                     h_value = HOMEKIT_INT(value);
                     h_value.format = ch->format;
-                    
+
                     /*
                     // New style
                     switch (ch->format) {
@@ -2535,7 +2544,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
                             return HAPStatus_InvalidValue;
                     }
                     */
-                    
+
                     if (ch->setter_ex) {
                         ch->setter_ex(ch, h_value);
                     } else {
@@ -2729,7 +2738,7 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
 
     free(statuses);
     cJSON_Delete(json);
-    
+
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
     sdk_system_restoreclock();
 #endif
@@ -3313,9 +3322,9 @@ client_context_t *homekit_server_accept_client(homekit_server_t *server) {
     } else {
         strcpy(address_buffer, "?.?.?.?");
     }
-    
+
     HOMEKIT_INFO("[%d] New %s:%d", s, address_buffer, addr.sin_port);
-    
+
     /* Check and remove any old conection with same IP addr and port */
     struct sockaddr_in old_addr;
     client_context_t *context = server->clients;
@@ -3460,7 +3469,7 @@ void homekit_server_close_clients(homekit_server_t *server) {
             context = tmp;
         }
     }
-    
+
     server->clients = head.next;
     server->max_fd = max_fd;
 }
@@ -3543,7 +3552,7 @@ void homekit_setup_mdns(homekit_server_t *server) {
     }
 
     homekit_mdns_configure_init(name->value.string_value, PORT);
-    
+
     // accessory model name (required)
     homekit_mdns_add_txt("md", "%s", model->value.string_value);
     // protocol version (required)
@@ -3671,7 +3680,7 @@ void homekit_server_init(homekit_server_config_t *config) {
     if (config->insecure) {
         allow_insecure_connections = true;
     }
-    
+
     if (config->log_output) {
         homekit_log_output = true;
     }

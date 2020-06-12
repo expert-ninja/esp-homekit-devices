@@ -17,8 +17,6 @@
 #define OTAVERSION              "1.0.1"
 
 #define CUSTOM_REPO_SYSPARAM    "ota_server"
-#define PORT_NUMBER_SYSPARAM    "ota_port"
-#define PORT_SECURE_SYSPARAM    "ota_sec"
 #define OTA_VERSION_SYSPARAM    "ota_repo"
 #define USER_VERSION_SYSPARAM   "ota_version"
 #define WIFI_SSID_SYSPARAM      "wifi_ssid"
