@@ -11,8 +11,8 @@
  *
  */
  
-#ifndef __HAA_IR_CODE_H__
-#define __HAA_IR_CODE_H__
+#ifndef __ESPY_IR_CODE_H__
+#define __ESPY_IR_CODE_H__
 
 //#define IR_CODE_DIGITS          2
 #define IR_CODE_LEN             83
@@ -23,4 +23,4 @@ const char baseRaw_dic[] = "0ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy
 const char baseUC_dic[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char baseLC_dic[] = "abcdefghijklmnopqrstuvwxyz";
 
-#endif  // __HAA_IR_CODE_H__
+#endif  // __ESPY_IR_CODE_H__

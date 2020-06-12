@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef __HAA_EXTRA_CHARACTERISTICS__
-#define __HAA_EXTRA_CHARACTERISTICS__
+#ifndef __ESPY_EXTRA_CHARACTERISTICS__
+#define __ESPY_EXTRA_CHARACTERISTICS__
 
 #define HOMEKIT_MIAU_UUID(value) (value "-079E-48FF-8F27-9C2605A29F52")
 
@@ -52,4 +52,4 @@
     .value = HOMEKIT_FLOAT_(_value), \
     ##__VA_ARGS__
 
-#endif  // __HAA_EXTRA_CHARACTERISTICS__
+#endif  // __ESPY_EXTRA_CHARACTERISTICS__

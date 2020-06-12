@@ -86,7 +86,7 @@ ch_group_t* ch_groups = NULL;
 lightbulb_group_t* lightbulb_groups = NULL;
 ping_input_t* ping_inputs = NULL;
 
-#ifdef HAA_DEBUG
+#ifdef ESPY_DEBUG
 ETSTimer free_heap_timer;
 uint32_t free_heap = 0;
 void free_heap_watchdog() {
@@ -96,7 +96,7 @@ void free_heap_watchdog() {
         INFO("Free Heap: %d", free_heap);
     }
 }
-#endif  // HAA_DEBUG
+#endif  // ESPY_DEBUG
 
 void change_uart_gpio(const uint8_t gpio) {
     if (gpio == 1) {
@@ -298,7 +298,7 @@ void reboot_task() {
 void setup_mode_call(const uint8_t gpio, void *args, const uint8_t param) {
     INFO("Setup mode call");
     if (setup_mode_time == 0 || xTaskGetTickCountFromISR() < setup_mode_time * 1000 / portTICK_PERIOD_MS) {
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
         xTaskCreate(reboot_task, "reboot_task", REBOOT_TASK_SIZE, NULL, 1, NULL);
     } else {
         ERROR("Not allowed after %i secs since boot", setup_mode_time);
@@ -2618,19 +2618,19 @@ void run_homekit_server() {
 
 void printf_header() {
     printf("\n*******************************\n* ESPY House %s\n*******************************\n\n", FIRMWARE_VERSION);
-#ifdef HAA_DEBUG
-    printf("HAA DEBUG ENABLED\n\n");
-#endif  // HAA_DEBUG
+#ifdef ESPY_DEBUG
+    printf("ESPY DEBUG ENABLED\n\n");
+#endif  // ESPY_DEBUG
 }
 
 void normal_mode_init() {
     char *txt_config = NULL;
-    sysparam_get_string(HAA_JSON_SYSPARAM, &txt_config);
+    sysparam_get_string(ESPY_JSON_SYSPARAM, &txt_config);
 
-    cJSON *json_haa = cJSON_Parse(txt_config);
+    cJSON *json_main = cJSON_Parse(txt_config);
 
-    cJSON *json_config = cJSON_GetObjectItemCaseSensitive(json_haa, GENERAL_CONFIG);
-    cJSON *json_accessories = cJSON_GetObjectItemCaseSensitive(json_haa, ACCESSORIES);
+    cJSON *json_config = cJSON_GetObjectItemCaseSensitive(json_main, GENERAL_CONFIG);
+    cJSON *json_accessories = cJSON_GetObjectItemCaseSensitive(json_main, ACCESSORIES);
     const uint8_t total_accessories = cJSON_GetArraySize(json_accessories);
     if (total_accessories == 0) {
         uart_set_baud(0, 115200);
@@ -2638,7 +2638,7 @@ void normal_mode_init() {
         printf("JSON:\n %s\n\n\n", txt_config);
         printf("! Invalid JSON\n");
         sysparam_set_int8(TOTAL_ACC_SYSPARAM, 0);
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 2);
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 2);
         xTaskCreate(reboot_task, "reboot_task", REBOOT_TASK_SIZE, NULL, 1, NULL);
         vTaskDelete(NULL);
     }
@@ -4852,22 +4852,22 @@ void normal_mode_init() {
     config.config_number = FIRMWARE_VERSION_OCTAL;
     config.log_output = (bool) log_output_type;
     setup_mode_toggle_counter = 0;
-    cJSON_Delete(json_haa);
+    cJSON_Delete(json_main);
     wifi_config_init("ESPY", NULL, run_homekit_server, custom_hostname);
     vTaskDelete(NULL);
 }
 
 void user_init(void) {
-#ifdef HAA_DEBUG
+#ifdef ESPY_DEBUG
     sdk_os_timer_setfn(&free_heap_timer, free_heap_watchdog, NULL);
     sdk_os_timer_arm(&free_heap_timer, 2000, 1);
-#endif // HAA_DEBUG
+#endif // ESPY_DEBUG
     sdk_wifi_station_set_auto_connect(false);
     sdk_wifi_set_opmode(STATION_MODE);
     sdk_wifi_station_disconnect();
 
     printf("\n\n\n\n");
-#ifndef HAALCM
+#ifndef ESPYLCM
     // Sysparam starter
     sysparam_status_t status;
     status = sysparam_init(SYSPARAMSECTOR, 0);
@@ -4879,24 +4879,24 @@ void user_init(void) {
     } else if (status == SYSPARAM_OK) {
         printf("Sysparam ready\n");
     }
-#endif  // HAALCM
+#endif // ESPYLCM
 
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
     snprintf(name_value, 12, "ESPY-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     name.value = HOMEKIT_STRING(name_value);
-    int8_t haa_setup = 0;
-    //sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 2);            // Force to enter always in setup mode. Only for tests. Keep comment for releases
+    int8_t setup = 0;
+    //sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 2);            // Force to enter always in setup mode. Only for tests. Keep comment for releases
     //sysparam_set_string("ota_repo", "1");     // Simulates Installation with OTA. Only for tests. Keep comment for releases
-    sysparam_get_int8(HAA_SETUP_MODE_SYSPARAM, &haa_setup);
-    if (haa_setup > 0) {
+    sysparam_get_int8(ESPY_SETUP_MODE_SYSPARAM, &setup);
+    if (setup > 0) {
         uart_set_baud(0, 115200);
         printf_header();
         printf("SETUP MODE\n");
         wifi_config_init("ESPY", NULL, NULL, name.value.string_value);
     } else {
         // Arming emergency Setup Mode
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
         xTaskCreate(normal_mode_init, "normal_mode_init", INITIAL_SETUP_TASK_SIZE, NULL, INITIAL_SETUP_TASK_PRIORITY, NULL);
     }
 }

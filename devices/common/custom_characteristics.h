@@ -69,9 +69,9 @@
     .value = HOMEKIT_BOOL_(_value), \
     ##__VA_ARGS__
 
-#define HOMEKIT_CHARACTERISTIC_CUSTOM_HAA_UPDATE HOMEKIT_CUSTOM_UUID("F0000005")
-#define HOMEKIT_DECLARE_CHARACTERISTIC_CUSTOM_HAA_UPDATE(_value, ...) \
-    .type = HOMEKIT_CHARACTERISTIC_CUSTOM_HAA_UPDATE, \
+#define HOMEKIT_CHARACTERISTIC_CUSTOM_ESPY_UPDATE HOMEKIT_CUSTOM_UUID("F0000005")
+#define HOMEKIT_DECLARE_CHARACTERISTIC_CUSTOM_ESPY_UPDATE(_value, ...) \
+    .type = HOMEKIT_CHARACTERISTIC_CUSTOM_ESPY_UPDATE, \
     .description = "Firmware ESPY", \
     .format = homekit_format_bool, \
     .permissions = homekit_permissions_paired_read \

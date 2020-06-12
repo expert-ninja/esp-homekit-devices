@@ -41,8 +41,8 @@
 #define WIFI_BSSID_SYSPARAM             "wifi_bssid"
 #define AUTO_OTA_SYSPARAM               "aota"
 #define TOTAL_ACC_SYSPARAM              "total_ac"
-#define HAA_JSON_SYSPARAM               "haa_conf"
-#define HAA_SETUP_MODE_SYSPARAM         "setup"
+#define ESPY_JSON_SYSPARAM              "conf"
+#define ESPY_SETUP_MODE_SYSPARAM        "setup"
 
 #define WIFI_CONFIG_SERVER_PORT         80
 
@@ -99,7 +99,7 @@ static void body_malloc(client_t* client) {
 static client_t *client_new() {
     client_t *client = malloc(sizeof(client_t));
     memset(client, 0, sizeof(client_t));
-    
+
     body_malloc(client);
 
     http_parser_init(&client->parser, HTTP_REQUEST);
@@ -249,7 +249,7 @@ static void wifi_config_server_on_settings(client_t *client) {
     // JSON
     char *text = NULL;
     sysparam_status_t status;
-    status = sysparam_get_string(HAA_JSON_SYSPARAM, &text);
+    status = sysparam_get_string(ESPY_JSON_SYSPARAM, &text);
     if (status == SYSPARAM_OK) {
         client_send_chunk(client, text);
         free(text);
@@ -381,7 +381,7 @@ static void wifi_config_server_on_settings_update_task(void* args) {
 
     if (conf_param && conf_param->value) {
         taskYIELD();
-        sysparam_set_string(HAA_JSON_SYSPARAM, conf_param->value);
+        sysparam_set_string(ESPY_JSON_SYSPARAM, conf_param->value);
     }
 
     if (autoota_param) {
@@ -866,10 +866,10 @@ static void wifi_config_station_connect() {
         sdk_os_timer_setfn(&context->sta_connect_timeout, wifi_config_sta_connect_timeout_callback, context);
         sdk_os_timer_arm(&context->sta_connect_timeout, 1000, 1);
         if (!context->on_wifi_ready) {
-            INFO("HAA Setup");
+            INFO("ESPY Setup");
             int8_t setup_mode = 0;
-            sysparam_get_int8(HAA_SETUP_MODE_SYSPARAM, &setup_mode);
-            sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 0);
+            sysparam_get_int8(ESPY_SETUP_MODE_SYSPARAM, &setup_mode);
+            sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
 
             if (setup_mode == 1) {
                 INFO("Enabling auto reboot");

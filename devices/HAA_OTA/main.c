@@ -46,7 +46,7 @@ int file_size = 0;
 uint8_t tries_count = 0;
 
 void ota_task(void *arg) {
-#ifdef HAABOOT
+#ifdef ESPYBOOT
     printf("\n*******************************\n* ESPY House Installer %s\n*******************************\n\n", OTAVERSION);
     sysparam_set_string(USER_VERSION_SYSPARAM, "none");
 #else
@@ -62,32 +62,32 @@ void ota_task(void *arg) {
 
     status = sysparam_get_string(USER_VERSION_SYSPARAM, &user_version);
     if (status == SYSPARAM_OK) {
-        printf("Current HAAMAIN version installed: %s\n", user_version);
+        printf("Current ESPYMAIN version installed: %s\n", user_version);
 
         ota_init(user_repo);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 0);
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
         for (;;) {
             printf("\n*** STARTING UPDATE PROCESS\n\n");
             tries_count++;
-#ifdef HAABOOT
+#ifdef ESPYBOOT
             if (ota_get_sign(user_repo, OTAMAINFILE, signature) > 0) {
                 file_size = ota_get_file(user_repo, OTAMAINFILE, BOOT1SECTOR);
                 if (file_size > 0 && ota_verify_sign(BOOT1SECTOR, file_size, signature) == 0) {
                     ota_finalize_file(BOOT1SECTOR);
                     printf("\n*** OTAMAIN installed\n\n");
-                    sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 0);
+                    sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
                     rboot_set_temp_rom(1);
                     ota_reboot();
                 } else {
                     printf("\n!!! Error installing OTAMAIN\n\n");
-                    sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+                    sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
                 }
             } else {
                 printf("\n!!! Error downloading OTAMAIN signature\n\n");
-                sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+                sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
             }
-#else   // HAABOOT
+#else   // ESPYBOOT
             int compare_ota_version;
 
             if (ota_version == NULL) ota_version = ota_get_version(user_repo, OTAVERSIONFILE);
@@ -109,37 +109,37 @@ void ota_task(void *arg) {
                     if (file_size > 0 && ota_verify_sign(BOOT0SECTOR, file_size, signature) == 0) {
                         ota_finalize_file(BOOT0SECTOR);
                         sysparam_set_string(OTA_VERSION_SYSPARAM, ota_version);
-                        printf("\n*** HAABOOT v%s installed\n\n", ota_version);
+                        printf("\n*** ESPYBOOT v%s installed\n\n", ota_version);
                     } else {
-                        printf("\n!!! Error installing HAABOOT\n\n");
+                        printf("\n!!! Error installing ESPYBOOT\n\n");
                     }
                     break;
                 } else {
-                    printf("\n!!! Error downloading HAABOOT signature\n\n");
+                    printf("\n!!! Error downloading ESPYBOOT signature\n\n");
                 }
             }
             if (new_version) {
                 free(new_version);
                 new_version = NULL;
             }
-            new_version = ota_get_version(user_repo, HAAVERSIONFILE);
+            new_version = ota_get_version(user_repo, ESPYVERSIONFILE);
             printf("\n*** Server version: [%s], local version [%s]\n\n", new_version, user_version);
             if (new_version && strcmp(new_version, user_version) != 0) {
-                if (ota_get_sign(user_repo, HAAMAINFILE, signature) > 0) {
-                    file_size = ota_get_file(user_repo, HAAMAINFILE, BOOT0SECTOR);
+                if (ota_get_sign(user_repo, ESPYMAINFILE, signature) > 0) {
+                    file_size = ota_get_file(user_repo, ESPYMAINFILE, BOOT0SECTOR);
                     if (file_size > 0 && ota_verify_sign(BOOT0SECTOR, file_size, signature) == 0) {
                         ota_finalize_file(BOOT0SECTOR);
                         sysparam_set_string(USER_VERSION_SYSPARAM, new_version);
-                        printf("\n*** HAAMAIN v%s installed\n\n", new_version);
+                        printf("\n*** ESPYMAIN v%s installed\n\n", new_version);
                     } else {
-                        printf("\n!!! Error installing HAAMAIN\n\n");
+                        printf("\n!!! Error installing ESPYMAIN\n\n");
                     }
                 } else {
-                    printf("\n!!! Error downloading HAAMAIN signature\n\n");
+                    printf("\n!!! Error downloading ESPYMAIN signature\n\n");
                 }
             }
             break;
-#endif  // HAABOOT
+#endif  // ESPYBOOT
             if (tries_count == MAX_TRIES) {
                 break;
             }

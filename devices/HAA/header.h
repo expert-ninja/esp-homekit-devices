@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef __HAA_HEADER_H__
-#define __HAA_HEADER_H__
+#ifndef __ESPY_HEADER_H__
+#define __ESPY_HEADER_H__
 
 // Version
 #define FIRMWARE_VERSION                    "1.0.1"
@@ -23,8 +23,8 @@
 #define SYSPARAMSIZE                        8
 
 #define TOTAL_ACC_SYSPARAM                  "total_ac"
-#define HAA_JSON_SYSPARAM                   "haa_conf"
-#define HAA_SETUP_MODE_SYSPARAM             "setup"
+#define ESPY_JSON_SYSPARAM                  "conf"
+#define ESPY_SETUP_MODE_SYSPARAM            "setup"
 
 // Characteristic types (ch_type)
 #define CH_TYPE_BOOL                        0
@@ -390,4 +390,4 @@
 
 #define FREEHEAP()                          printf("Free Heap: %d\n", xPortGetFreeHeapSize())
 
-#endif // __HAA_HEADER_H__
+#endif // __ESPY_HEADER_H__

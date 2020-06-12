@@ -243,7 +243,7 @@ static void wifi_config_server_on_settings(client_t *client) {
 
     char *text = NULL;
 
-    status = sysparam_get_string(HAA_JSON_SYSPARAM, &text);
+    status = sysparam_get_string(ESPY_JSON_SYSPARAM, &text);
     if (status == SYSPARAM_OK) {
         client_send_chunk(client, text);
         free(text);
@@ -364,11 +364,11 @@ static void wifi_config_server_on_settings_update_task(void* args) {
         sysparam_set_data(saved_state_id, NULL, 0, false);
     }
 
-    sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 0);
+    sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
 
     if (conf_param && conf_param->value) {
         taskYIELD();
-        sysparam_set_string(HAA_JSON_SYSPARAM, conf_param->value);
+        sysparam_set_string(ESPY_JSON_SYSPARAM, conf_param->value);
     }
 
     if (autoota_param) {
@@ -843,16 +843,16 @@ static uint8_t wifi_config_connect() {
 
 static void wifi_config_station_connect() {
     int8_t setup_mode = 0;
-    sysparam_get_int8(HAA_SETUP_MODE_SYSPARAM, &setup_mode);
+    sysparam_get_int8(ESPY_SETUP_MODE_SYSPARAM, &setup_mode);
     if (wifi_config_connect() == 1 && setup_mode == 0) {
-        INFO("\nHAA OTA - NORMAL MODE\n");
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 1);
+        INFO("\nESPY OTA - NORMAL MODE\n");
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
         wifi_config_sta_connect_timeout_callback(context);
         sdk_os_timer_setfn(&context->sta_connect_timeout, wifi_config_sta_connect_timeout_callback, context);
         sdk_os_timer_arm(&context->sta_connect_timeout, 1000, 1);
     } else {
-        INFO("\nHAA OTA - SETUP MODE\n");
-        sysparam_set_int8(HAA_SETUP_MODE_SYSPARAM, 0);
+        INFO("\nESPY OTA - SETUP MODE\n");
+        sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
         if (setup_mode == 1) {
             sdk_os_timer_setfn(&auto_reboot_timer, auto_reboot_run, NULL);
             sdk_os_timer_arm(&auto_reboot_timer, AUTO_REBOOT_TIMEOUT, 0);

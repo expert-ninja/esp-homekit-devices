@@ -14,15 +14,15 @@
  *
  */
 
-#ifndef __HAA_OTA_H__
-#define __HAA_OTA_H__
+#ifndef __ESPY_OTA_H__
+#define __ESPY_OTA_H__
 
 #define REPOSITORY              "https://github.com/expert-ninja/espy-house"
 #define OTAMAINFILE             "otamain.bin"
 #define OTABOOTFILE             "haaboot.bin"
-#define HAAMAINFILE             "haamain.bin"
+#define ESPYMAINFILE            "haamain.bin"
 #define OTAVERSIONFILE          "otaversion"
-#define HAAVERSIONFILE          "haaversion"
+#define ESPYVERSIONFILE         "haaversion"
 #define SIGNFILESUFIX           ".sec"
 #define VERSIONFILESIZE         9
 
@@ -60,4 +60,4 @@ int ota_get_sign(char* repo, char* file, byte* signature);
 int ota_verify_sign(int address, int file_size, byte* signature);
 void ota_reboot();
 
-#endif // __HAA_OTA_H__
+#endif // __ESPY_OTA_H__
