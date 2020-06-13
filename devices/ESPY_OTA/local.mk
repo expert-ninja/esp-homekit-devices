@@ -1,10 +1,10 @@
-PROGRAM = espy_installer
-EXTRA_CFLAGS += -DESPY_INSTALLER
-
-### select EITHER the top block OR the bottom block
-
-#PROGRAM = espy_ota
-#LINKER_SCRIPTS = $(ROOT)ld/program1.ld
+ifdef ESPY_INSTALLER
+	PROGRAM = espy_installer
+	EXTRA_CFLAGS += -DESPY_INSTALLER
+else
+	PROGRAM = espy_ota
+	LINKER_SCRIPTS = $(ROOT)ld/program1.ld
+endif
 
 #==================================================
 # for this to work, we need to copy $(ROOT)ld/program.ld
