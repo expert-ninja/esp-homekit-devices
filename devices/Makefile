@@ -27,7 +27,7 @@ rebuild_main:
 
 ota:
 	cd ESPY_OTA && $(MAKE) all && $(SIGN_BIN) firmware/espy_ota.bin && rm -rf build && ESPY_INSTALLER=1 $(MAKE) all && $(SIGN_BIN) firmware/espy_installer.bin && \
-	cat full_boot_bin/fullrboot.bin firmware/espy_installer.bin full_boot_bin/tasmota_append.bin >firmware/full_espy_boot.bin && $(SIGN_BIN) firmware/full_espy_boot.bin
+	cat full_boot_bin/fullrboot.bin firmware/espy_installer.bin full_boot_bin/tasmota_append.bin >firmware/full_espy_installer.bin && $(SIGN_BIN) firmware/full_espy_installer.bin
 
 clean_ota:
 	cd ESPY_OTA && $(MAKE) clean
