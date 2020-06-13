@@ -4,3 +4,6 @@
 [submodule "external_libs/esp-wolfssl"]
 	path = external_libs/esp-wolfssl
 	url = git@github.com:maximkulkin/esp-wolfssl.git
+[submodule "sdk/esp-open-sdk"]
+	path = sdk/esp-open-sdk
+	url = git@github.com:pfalcon/esp-open-sdk.git
