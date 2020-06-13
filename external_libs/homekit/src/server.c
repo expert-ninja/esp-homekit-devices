@@ -2128,17 +2128,24 @@ void homekit_server_on_get_version(client_context_t *context) {
     sdk_system_overclock();
 #endif
 
-    char *ota_version = NULL;
-    char *user_version = NULL;
-    sysparam_get_string(OTA_VERSION_SYSPARAM, &ota_version);
-    sysparam_get_string(USER_VERSION_SYSPARAM, &user_version);
+    char *version = NULL;
+    sysparam_status_t status;
 
     client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
 
     json_stream *json = json_new(64, client_send_chunk, context);
     json_object_start(json);
-    json_string(json, "ota"); json_string(json, ota_version);
-    json_string(json, "main"); json_string(json, user_version);
+
+    status = sysparam_get_string(OTA_VERSION_SYSPARAM, &version);
+    if (status == SYSPARAM_OK) {
+        json_string(json, "ota"); json_string(json, version);
+        free(version);
+    }
+    status = sysparam_get_string(USER_VERSION_SYSPARAM, &version);
+    if (status == SYSPARAM_OK) {
+        json_string(json, "main"); json_string(json, version);
+        free(version);
+    }
 
     json_object_end(json);
 

@@ -1,7 +1,5 @@
 #define HAA_SETUP_MODE_SYSPARAM "setup"
 #define CUSTOM_REPO_SYSPARAM    "ota_server"
-#define PORT_NUMBER_SYSPARAM    "ota_port"
-#define PORT_SECURE_SYSPARAM    "ota_sec"
 #define AUTO_OTA_SYSPARAM       "aota"
 #define OTA_VERSION_SYSPARAM    "ota_repo"
 #define USER_VERSION_SYSPARAM   "ota_version"
