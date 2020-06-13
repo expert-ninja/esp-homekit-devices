@@ -83,8 +83,7 @@ void user_init() {
 
     uart_set_baud(0, 115200);
 
-    printf("\n\nESPY IR RAW Code Capture Tool v1.0\n");
-    printf("by José A. Jiménez Campos\n\n");
+    printf("\n\nEspy House IR RAW Code Capture Tool v1.0\n");
     printf("IR RX Data GPIO: %i\n\n", IR_RX_GPIO);
 
     gpio_enable(IR_RX_GPIO, GPIO_INPUT);
