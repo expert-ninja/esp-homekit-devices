@@ -1,6 +1,7 @@
 [submodule "sdk/esp-open-rtos"]
 	path = sdk/esp-open-rtos
 	url = https://github.com/SuperHouse/esp-open-rtos.git
+	ignore = dirty
 [submodule "external_libs/esp-wolfssl"]
 	path = external_libs/esp-wolfssl
 	url = git@github.com:maximkulkin/esp-wolfssl.git
