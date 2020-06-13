@@ -28,4 +28,4 @@
 #define ESPY_JSON_SYSPARAM       "conf"
 #define ESPY_SETUP_MODE_SYSPARAM "setup"
 
-#endif  // __HAA_OTA_HEADER_H__
+#endif  // __ESPY_OTA_HEADER_H__

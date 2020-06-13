@@ -1,5 +1,5 @@
 PROGRAM = haaboot
-EXTRA_CFLAGS += -DHAABOOT
+EXTRA_CFLAGS += -DESPYBOOT
 
 ### select EITHER the top block OR the bottom block
 
