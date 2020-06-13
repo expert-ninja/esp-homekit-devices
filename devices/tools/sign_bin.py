@@ -1,4 +1,4 @@
-#!env python3
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -59,7 +59,7 @@ def main():
 
     signature = b''
     while len(signature) < 104:
-        signature = sign(file_data, 'priv_key.der')
+        signature = sign(file_data, os.path.split(os.path.abspath(sys.argv[0]))[0] + '/priv_key.der')
 
     with open(f'{file_name}.sec', 'wb') as f:
         f.write(signature)
