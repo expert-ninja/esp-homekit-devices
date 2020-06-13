@@ -15,8 +15,8 @@
 #define __ESPY_HEADER_H__
 
 // Version
-#define FIRMWARE_VERSION                    "1.0.1"
-#define FIRMWARE_VERSION_OCTAL              010001      // Matches as example: firmware_revision 2.3.8 = 02.03.10 (octal) = config_number 020310
+#define FIRMWARE_VERSION                    "1.0.2"
+#define FIRMWARE_VERSION_OCTAL              010002      // Matches as example: firmware_revision 2.3.8 = 02.03.10 (octal) = config_number 020310
 
 // Sysparam
 #define SYSPARAMSECTOR                      0xF3000
