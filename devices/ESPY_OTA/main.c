@@ -57,8 +57,10 @@ void ota_task(void *arg) {
 
     status = sysparam_get_string("haa_conf", &text);
     if (status == SYSPARAM_OK) {
-        sysparam_set_string(ESPY_JSON_SYSPARAM, &text);
-        sysparam_set_string("haa_conf", "");
+        if (strlen(text) > 0) {
+            sysparam_set_string(ESPY_JSON_SYSPARAM, text);
+            sysparam_set_string("haa_conf", "");
+        }
         free(text);
     }
 //
