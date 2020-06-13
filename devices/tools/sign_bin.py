@@ -61,11 +61,11 @@ def main():
     while len(signature) < 104:
         signature = sign(file_data, os.path.split(os.path.abspath(sys.argv[0]))[0] + '/priv_key.der')
 
-    with open(f'{file_name}.sec', 'wb') as f:
+    with open(f'{file_name}.sign', 'wb') as f:
         f.write(signature)
 
     print('Verify signature: ', end='')
-    with open(f'{file_name}.sec', 'rb') as f:
+    with open(f'{file_name}.sign', 'rb') as f:
         print('ok' if (check_signature(file_data, f.read(), public_key)) else 'failed')
 
 if __name__ == '__main__':
