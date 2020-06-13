@@ -12,4 +12,4 @@ $(wifi_config_OBJ_DIR)/src/wifi_config.o: $(wifi_config_OBJ_DIR)/content/index.h
 $(wifi_config_OBJ_DIR)%.html.h: $(wifi_config_ROOT)%.html
 	$(vecho "Embed %<")
 	$(Q) mkdir -p $(@D)
-	$(Q) ../common/tools/embed.py $< > $@
+	$(Q) ../tools/embed.py $< > $@
