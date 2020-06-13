@@ -1,6 +1,8 @@
 #set this in local.mk
 #PROGRAM = main
 
+PATH := $(shell pwd)/../../sdk/esp-open-sdk/xtensa-lx106-elf/bin:$(PATH)
+
 EXTRA_COMPONENTS = \
 	extras/sntp \
 	extras/http-parser \
@@ -11,7 +13,7 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../external_libs/esp-wolfssl) \
 	$(abspath ../../libs/adv_logger)
 
-FLASH_SIZE ?= 8
+FLASH_SIZE ?= 1MB
 
 EXTRA_WOLFSSL_CFLAGS = \
 	-DWOLFSSL_USER_SETTINGS \

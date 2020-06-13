@@ -1,5 +1,6 @@
 PROGRAM = haamain
 
+PATH := $(shell pwd)/../../sdk/esp-open-sdk/xtensa-lx106-elf/bin:$(PATH)
 
 EXTRA_COMPONENTS = \
 	$(abspath setup_mode) \
@@ -19,7 +20,7 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../libs/adv_logger)
 	
 
-FLASH_SIZE = 8
+FLASH_SIZE = 1MB
 FLASH_MODE = dout
 FLASH_SPEED = 40
 
