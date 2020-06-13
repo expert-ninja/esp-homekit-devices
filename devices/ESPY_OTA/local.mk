@@ -1,9 +1,9 @@
-PROGRAM = haaboot
+PROGRAM = espy_installer
 EXTRA_CFLAGS += -DESPYBOOT
 
 ### select EITHER the top block OR the bottom block
 
-#PROGRAM = otamain
+#PROGRAM = espy_ota
 #LINKER_SCRIPTS = $(ROOT)ld/program1.ld
 
 #==================================================

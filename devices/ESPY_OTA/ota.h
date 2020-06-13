@@ -18,12 +18,12 @@
 #define __ESPY_OTA_H__
 
 #define REPOSITORY              "https://github.com/expert-ninja/espy-house"
-#define OTAMAINFILE             "otamain.bin"
-#define OTABOOTFILE             "haaboot.bin"
-#define ESPYMAINFILE            "haamain.bin"
-#define OTAVERSIONFILE          "otaversion"
-#define ESPYVERSIONFILE         "haaversion"
-#define SIGNFILESUFIX           ".sec"
+#define OTAMAINFILE             "espy_ota.bin"
+#define OTABOOTFILE             "espy_installer.bin"
+#define ESPYMAINFILE            "espy_house.bin"
+#define OTAVERSIONFILE          "espy_ota.ver"
+#define ESPYVERSIONFILE         "espy_house.ver"
+#define SIGNFILESUFIX           ".sign"
 #define VERSIONFILESIZE         9
 
 #define MAX_TRIES               2
