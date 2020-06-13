@@ -1,7 +1,5 @@
 PROGRAM = espy_house
 
-PATH := $(shell pwd)/../../sdk/esp-open-sdk/xtensa-lx106-elf/bin:$(PATH)
-
 EXTRA_COMPONENTS = \
 	$(abspath setup_mode) \
 	extras/onewire \
