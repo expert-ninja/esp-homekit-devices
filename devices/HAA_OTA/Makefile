@@ -1,6 +1,8 @@
 #set this in local.mk
 #PROGRAM = main
 
+PATH := $(shell pwd)/../../sdk/esp-open-sdk/xtensa-lx106-elf/bin:$(PATH)
+
 EXTRA_COMPONENTS = \
 	extras/sntp \
 	extras/http-parser \
