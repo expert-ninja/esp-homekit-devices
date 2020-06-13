@@ -1,5 +1,5 @@
 PROGRAM = espy_installer
-EXTRA_CFLAGS += -DESPYBOOT
+EXTRA_CFLAGS += -DESPY_INSTALLER
 
 ### select EITHER the top block OR the bottom block
 

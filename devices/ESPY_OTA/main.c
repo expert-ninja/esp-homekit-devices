@@ -46,7 +46,7 @@ int file_size = 0;
 uint8_t tries_count = 0;
 
 void ota_task(void *arg) {
-#ifdef ESPYBOOT
+#ifdef ESPY_INSTALLER
     printf("\n*******************************\n* ESPY House Installer %s\n*******************************\n\n", OTAVERSION);
     sysparam_set_string(USER_VERSION_SYSPARAM, "none");
 #else
@@ -62,7 +62,7 @@ void ota_task(void *arg) {
 
     status = sysparam_get_string(USER_VERSION_SYSPARAM, &user_version);
     if (status == SYSPARAM_OK) {
-        printf("Current ESPYMAIN version installed: %s\n", user_version);
+        printf("Current Espy House version installed: %s\n", user_version);
 
         ota_init(user_repo);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -70,24 +70,24 @@ void ota_task(void *arg) {
         for (;;) {
             printf("\n*** STARTING UPDATE PROCESS\n\n");
             tries_count++;
-#ifdef ESPYBOOT
+#ifdef ESPY_INSTALLER
             if (ota_get_sign(user_repo, OTAMAINFILE, signature) > 0) {
                 file_size = ota_get_file(user_repo, OTAMAINFILE, BOOT1SECTOR);
                 if (file_size > 0 && ota_verify_sign(BOOT1SECTOR, file_size, signature) == 0) {
                     ota_finalize_file(BOOT1SECTOR);
-                    printf("\n*** OTAMAIN installed\n\n");
+                    printf("\n*** Espy House OTA installed\n\n");
                     sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
                     rboot_set_temp_rom(1);
                     ota_reboot();
                 } else {
-                    printf("\n!!! Error installing OTAMAIN\n\n");
+                    printf("\n!!! Error installing Espy House OTA\n\n");
                     sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
                 }
             } else {
-                printf("\n!!! Error downloading OTAMAIN signature\n\n");
+                printf("\n!!! Error downloading Espy House OTA signature\n\n");
                 sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
             }
-#else   // ESPYBOOT
+#else   // ESPY_INSTALLER
             int compare_ota_version;
 
             if (ota_version == NULL) ota_version = ota_get_version(user_repo, OTAVERSIONFILE);
@@ -109,13 +109,13 @@ void ota_task(void *arg) {
                     if (file_size > 0 && ota_verify_sign(BOOT0SECTOR, file_size, signature) == 0) {
                         ota_finalize_file(BOOT0SECTOR);
                         sysparam_set_string(OTA_VERSION_SYSPARAM, ota_version);
-                        printf("\n*** ESPYBOOT v%s installed\n\n", ota_version);
+                        printf("\n*** Espy House Installer v%s installed\n\n", ota_version);
                     } else {
-                        printf("\n!!! Error installing ESPYBOOT\n\n");
+                        printf("\n!!! Error installing Espy House Installer\n\n");
                     }
                     break;
                 } else {
-                    printf("\n!!! Error downloading ESPYBOOT signature\n\n");
+                    printf("\n!!! Error downloading Espy House Installer signature\n\n");
                 }
             }
             if (new_version) {
@@ -130,16 +130,16 @@ void ota_task(void *arg) {
                     if (file_size > 0 && ota_verify_sign(BOOT0SECTOR, file_size, signature) == 0) {
                         ota_finalize_file(BOOT0SECTOR);
                         sysparam_set_string(USER_VERSION_SYSPARAM, new_version);
-                        printf("\n*** ESPYMAIN v%s installed\n\n", new_version);
+                        printf("\n*** Espy House v%s installed\n\n", new_version);
                     } else {
-                        printf("\n!!! Error installing ESPYMAIN\n\n");
+                        printf("\n!!! Error installing Espy House\n\n");
                     }
                 } else {
-                    printf("\n!!! Error downloading ESPYMAIN signature\n\n");
+                    printf("\n!!! Error downloading Espy House signature\n\n");
                 }
             }
             break;
-#endif  // ESPYBOOT
+#endif  // ESPY_INSTALLER
             if (tries_count == MAX_TRIES) {
                 break;
             }
