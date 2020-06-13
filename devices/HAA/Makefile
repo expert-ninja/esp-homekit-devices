@@ -20,7 +20,7 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../libs/adv_logger)
 	
 
-FLASH_SIZE = 8
+FLASH_SIZE = 1MB
 FLASH_MODE = dout
 FLASH_SPEED = 40
 

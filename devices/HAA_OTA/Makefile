@@ -13,7 +13,7 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../external_libs/esp-wolfssl) \
 	$(abspath ../../libs/adv_logger)
 
-FLASH_SIZE ?= 8
+FLASH_SIZE ?= 1MB
 
 EXTRA_WOLFSSL_CFLAGS = \
 	-DWOLFSSL_USER_SETTINGS \
