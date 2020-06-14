@@ -140,6 +140,16 @@ static int ota_parse_url(const char* url, struct http_parser_url *u, bool redire
     return 0;
 }
 
+int ota_resolve(char* host, char* ip) {
+    int ret;
+
+    for (int i = 1; i <= MAX_DNS_TRIES; i++) {
+        if ((ret = netconn_gethostbyname(host, ip)) == ERR_OK) break;
+        printf("! ERROR DNS try #%d failed (err: %d)\n", i, ret);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
 void ota_init(char* repo) {
     ip_addr_t target_ip;
     struct http_parser_url u;
@@ -184,8 +194,8 @@ void ota_init(char* repo) {
         wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
     }
 
-    printf("DNS check result  = ");
-    if (netconn_gethostbyname(last_host, &target_ip)) {
+    printf("DNS check result = ");
+    if (ota_resolve(last_host, &target_ip)) {
         printf("ERROR\n");
         ota_reboot();
         return;
@@ -210,8 +220,7 @@ static int ota_connect(int *socket, WOLFSSL** ssl) {
         local_port = (256 * initial_port[0] + initial_port[1]) | 0xc000;
     }
     printf("%d, remotePort=%d hostName=%s DNS=", local_port, last_port, last_host);
-    ret = netconn_gethostbyname(last_host, &target_ip);
-    if (ret) {
+    if (ota_resolve(last_host, &target_ip)) {
         printf(FAILED);
         return -2;
     }
