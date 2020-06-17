@@ -208,7 +208,7 @@ void server_free(homekit_server_t *server) {
 #define TLV_DEBUG(values)
 #endif
 
-#define HOMEKIT_DEBUG_LOG(message, ...)             if (homekit_log_output) DEBUG(message, ##__VA_ARGS__)
+#define HOMEKIT_DEBUG_LOG(message, ...)         if (homekit_log_output) DEBUG(message, ##__VA_ARGS__)
 #define HOMEKIT_INFO(message, ...)              if (homekit_log_output) INFO(message, ##__VA_ARGS__)
 #define HOMEKIT_ERROR(message, ...)             if (homekit_log_output) ERROR(message, ##__VA_ARGS__)
 
@@ -1021,9 +1021,12 @@ void homekit_server_on_identify(client_context_t *context) {
     }
 }
 
-void homekit_server_on_pair_setup(client_context_t *context, const byte *data, size_t size) {
+void homekit_server_on_pair_setup(client_context_t *context) {
     HOMEKIT_DEBUG_LOG("Pair Setup");
     DEBUG_HEAP();
+
+    byte *data = (byte *)context->body;
+    size_t size = context->body_length;
 
 #ifdef HOMEKIT_OVERCLOCK_PAIR_SETUP
     sdk_system_overclock();
@@ -1522,9 +1525,12 @@ void homekit_server_on_pair_setup(client_context_t *context, const byte *data, s
 #endif
 }
 
-void homekit_server_on_pair_verify(client_context_t *context, const byte *data, size_t size) {
+void homekit_server_on_pair_verify(client_context_t *context) {
     HOMEKIT_DEBUG_LOG("HomeKit Pair Verify");
     DEBUG_HEAP();
+
+    byte *data = (byte *)context->body;
+    size_t size = context->body_length;
 
 #ifdef HOMEKIT_OVERCLOCK_PAIR_VERIFY
     sdk_system_overclock();
@@ -2301,9 +2307,12 @@ void homekit_server_on_get_characteristics(client_context_t *context) {
 #endif
 }
 
-void homekit_server_on_update_characteristics(client_context_t *context, const byte *data, size_t size) {
+void homekit_server_on_update_characteristics(client_context_t *context) {
     CLIENT_INFO(context, "Update Characteristics");
     DEBUG_HEAP();
+
+    byte *data = (byte *)context->body;
+    size_t size = context->body_length;
 
 #ifdef HOMEKIT_OVERCLOCK_UPDATE_CH
     sdk_system_overclock();
@@ -2751,9 +2760,12 @@ void homekit_server_on_update_characteristics(client_context_t *context, const b
 #endif
 }
 
-void homekit_server_on_pairings(client_context_t *context, const byte *data, size_t size) {
+void homekit_server_on_pairings(client_context_t *context) {
     HOMEKIT_DEBUG_LOG("HomeKit Pairings");
     DEBUG_HEAP();
+
+    byte *data = (byte *)context->body;
+    size_t size = context->body_length;
 
     tlv_values_t *message = tlv_new();
     tlv_parse(data, size, message);
@@ -3128,11 +3140,11 @@ int homekit_server_on_message_complete(http_parser *parser) {
 
     switch(context->endpoint) {
         case HOMEKIT_ENDPOINT_PAIR_SETUP: {
-            homekit_server_on_pair_setup(context, (const byte *)context->body, context->body_length);
+            homekit_server_on_pair_setup(context);
             break;
         }
         case HOMEKIT_ENDPOINT_PAIR_VERIFY: {
-            homekit_server_on_pair_verify(context, (const byte *)context->body, context->body_length);
+            homekit_server_on_pair_verify(context);
             break;
         }
         case HOMEKIT_ENDPOINT_IDENTIFY: {
@@ -3155,13 +3167,13 @@ int homekit_server_on_message_complete(http_parser *parser) {
         }
         case HOMEKIT_ENDPOINT_UPDATE_CHARACTERISTICS: {
             if (context->encrypted || allow_insecure_connections) {
-                homekit_server_on_update_characteristics(context, (const byte *)context->body, context->body_length);
+                homekit_server_on_update_characteristics(context);
             }
             break;
         }
         case HOMEKIT_ENDPOINT_PAIRINGS: {
             if (context->encrypted || allow_insecure_connections) {
-                homekit_server_on_pairings(context, (const byte *)context->body, context->body_length);
+                homekit_server_on_pairings(context);
             }
             break;
         }
