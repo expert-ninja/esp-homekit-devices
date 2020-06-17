@@ -51,19 +51,6 @@ void ota_task(void *arg) {
 #ifdef ESPY_INSTALLER
     printf("\n*******************************\n* ESPY House Installer %s\n*******************************\n\n", OTAVERSION);
     sysparam_set_string(USER_VERSION_SYSPARAM, "none");
-
-// Temp. migration code
-    char *text = NULL;
-
-    status = sysparam_get_string("haa_conf", &text);
-    if (status == SYSPARAM_OK) {
-        if (strlen(text) > 0) {
-            sysparam_set_string(ESPY_JSON_SYSPARAM, text);
-            sysparam_set_string("haa_conf", "");
-        }
-        free(text);
-    }
-//
 #else
     printf("\n*******************************\n* ESPY House OTA %s\n*******************************\n\n", OTAVERSION);
 #endif
