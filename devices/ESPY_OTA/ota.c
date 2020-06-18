@@ -140,7 +140,7 @@ static int ota_parse_url(const char* url, struct http_parser_url *u, bool redire
     return 0;
 }
 
-int ota_resolve(char* host, char* ip) {
+int ota_resolve(char* host, ip_addr_t* ip) {
     int ret;
 
     for (int i = 1; i <= MAX_DNS_TRIES; i++) {
@@ -148,6 +148,7 @@ int ota_resolve(char* host, char* ip) {
         printf("! ERROR DNS try #%d failed (err: %d)\n", i, ret);
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
+    return ret;
 }
 
 void ota_init(char* repo) {
