@@ -5,43 +5,11 @@
 #include "json.h"
 #include "debug.h"
 
-#define JSON_MAX_DEPTH 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 #define DEBUG_STATE(json) \
     DEBUG("State = %d, last JSON output: %s", \
           json->state, json->buffer + MAX(0, (long int)json->pos - 20));
-
-typedef enum {
-    JSON_STATE_START = 1,
-    JSON_STATE_END,
-    JSON_STATE_OBJECT,
-    JSON_STATE_OBJECT_KEY,
-    JSON_STATE_OBJECT_VALUE,
-    JSON_STATE_ARRAY,
-    JSON_STATE_ARRAY_ITEM,
-    JSON_STATE_ERROR,
-} json_state;
-
-typedef enum {
-    JSON_NESTING_OBJECT,
-    JSON_NESTING_ARRAY,
-} json_nesting;
-
-struct json_stream {
-    uint8_t *buffer;
-    size_t size;
-    size_t pos;
-
-    json_state state;
-
-    uint8_t nesting_idx;
-    json_nesting nesting[JSON_MAX_DEPTH];
-
-    json_flush_callback on_flush;
-    void *context;
-};
-
 
 json_stream *json_new(size_t buffer_size, json_flush_callback on_flush, void *context) {
     json_stream *json = malloc(sizeof(json_stream));

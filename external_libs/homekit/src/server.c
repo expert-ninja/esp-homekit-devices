@@ -75,7 +75,8 @@ typedef enum {
     HOMEKIT_ENDPOINT_RESOURCE,
     HOMEKIT_ENDPOINT_PREPARE,
     HOMEKIT_ENDPOINT_SETUP_MODE,
-    HOMEKIT_ENDPOINT_GET_VERSION
+    HOMEKIT_ENDPOINT_GET_VERSION,
+    HOMEKIT_ENDPOINT_CONFIG
 } homekit_endpoint_t;
 
 
@@ -784,8 +785,18 @@ void client_send_chunk(byte *data, size_t size, void *arg) {
 }
 
 
+void send_200_response(client_context_t *context) {
+    static char response[] = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+    client_send(context, (byte *)response, sizeof(response)-1);
+}
+
 void send_204_response(client_context_t *context) {
     static char response[] = "HTTP/1.1 204 No Content\r\n\r\n";
+    client_send(context, (byte *)response, sizeof(response)-1);
+}
+
+void send_403_response(client_context_t *context) {
+    static char response[] = "HTTP/1.1 403 Forbidden\r\n\r\n";
     client_send(context, (byte *)response, sizeof(response)-1);
 }
 
@@ -899,7 +910,6 @@ static byte json_200_response_headers[] =
     "Transfer-Encoding: chunked\r\n"
     "Connection: keep-alive\r\n\r\n";
 
-
 static byte json_207_response_headers[] =
     "HTTP/1.1 207 Multi-Status\r\n"
     "Content-Type: application/hap+json\r\n"
@@ -907,13 +917,13 @@ static byte json_207_response_headers[] =
     "Connection: keep-alive\r\n\r\n";
 
 
-void send_json_response(client_context_t *context, int status_code, byte *payload, size_t payload_size) {
+void send_json_response(client_context_t *context, int status_code, byte *payload, size_t payload_size, bool hap) {
     CLIENT_DEBUG(context, "Sending JSON response");
     DEBUG_HEAP();
 
     static char *http_headers =
         "HTTP/1.1 %d %s\r\n"
-        "Content-Type: application/hap+json\r\n"
+        "Content-Type: application/%sjson\r\n"
         "Content-Length: %d\r\n"
         "Connection: keep-alive\r\n\r\n";
 
@@ -931,12 +941,13 @@ void send_json_response(client_context_t *context, int status_code, byte *payloa
     }
 
     int response_size = strlen(http_headers) + payload_size + strlen(status_text) + 32;
+    if (hap) response_size += 4;
     char *response = malloc(response_size);
     if (!response) {
         CLIENT_ERROR(context, "Failed to allocate response buffer of size %d", response_size);
         return;
     }
-    int response_len = snprintf(response, response_size, http_headers, status_code, status_text, payload_size);
+    int response_len = snprintf(response, response_size, http_headers, status_code, status_text, hap ? "hap+" : "", payload_size);
 
     if (response_size - response_len < payload_size + 1) {
         CLIENT_ERROR(context, "Incorrect response buffer size %d: headers took %d, payload size %d", response_size, response_len, payload_size);
@@ -959,7 +970,7 @@ void send_json_error_response(client_context_t *context, int status_code, HAPSta
     byte buffer[32];
     int size = snprintf((char *)buffer, sizeof(buffer), "{\"status\": %d}", status);
 
-    send_json_response(context, status_code, buffer, size);
+    send_json_response(context, status_code, buffer, size, true);
 }
 
 
@@ -2108,8 +2119,8 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
         HOMEKIT_INFO("Update mode, rebooting");
     }
 
-    client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
-    client_send_chunk(NULL, 0, context);
+    send_200_response(context);
+    context->disconnect = true;
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
@@ -2137,9 +2148,7 @@ void homekit_server_on_get_version(client_context_t *context) {
     char *version = NULL;
     sysparam_status_t status;
 
-    client_send(context, json_200_response_headers, sizeof(json_200_response_headers)-1);
-
-    json_stream *json = json_new(64, client_send_chunk, context);
+    json_stream* json = json_new(64, NULL, NULL);
     json_object_start(json);
 
     status = sysparam_get_string(OTA_VERSION_SYSPARAM, &version);
@@ -2155,10 +2164,58 @@ void homekit_server_on_get_version(client_context_t *context) {
 
     json_object_end(json);
 
-    json_flush(json);
+    send_json_response(context, 200, (byte*)(json->buffer), strlen((char*)json->buffer), false);
     json_free(json);
 
     client_send_chunk(NULL, 0, context);
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_restoreclock();
+#endif
+}
+
+void homekit_server_on_config(http_parser *parser) {
+    DEBUG_HEAP();
+
+    client_context_t *context = parser->data;
+
+#ifdef HOMEKIT_OVERCLOCK_GET_ACC
+    sdk_system_overclock();
+#endif
+
+    char *config = NULL;
+    sysparam_status_t status;
+
+    if (parser->method == HTTP_GET) {
+        CLIENT_INFO(context, "Get Configuration");
+
+        status = sysparam_get_string(ESPY_JSON_SYSPARAM, &config);
+        if (status == SYSPARAM_OK) {
+            send_json_response(context, 200, (byte*)config, strlen(config), false);
+            free(config);
+        } else {
+            send_404_response(context);
+        }
+    } else { // POST
+        CLIENT_INFO(context, "Set Configuration");
+
+        char *data = strndup((char *)context->body, context->body_length);
+        cJSON *json = cJSON_Parse(data);
+        free(data);
+
+        if (!json) {
+            CLIENT_ERROR(context, "Failed to parse request JSON");
+            send_403_response(context);
+        }
+
+        cJSON_Delete(json);
+
+        sysparam_set_string(ESPY_JSON_SYSPARAM, (char *)context->body);
+
+        send_200_response(context);
+        context->disconnect = true;
+    }
+
 
 #ifdef HOMEKIT_OVERCLOCK_GET_ACC
     sdk_system_restoreclock();
@@ -3067,6 +3124,8 @@ int homekit_server_on_url(http_parser *parser, const char *data, size_t length) 
             context->endpoint = HOMEKIT_ENDPOINT_GET_ACCESSORIES;
         } else if (!strncmp(data, "/version", length)) {
             context->endpoint = HOMEKIT_ENDPOINT_GET_VERSION;
+        } else if (!strncmp(data, "/config", length)) {
+            context->endpoint = HOMEKIT_ENDPOINT_CONFIG;
         } else if (strncmp(data, "/setup_mode", length) >= 0) {
             static const char url[] = "/setup_mode";
             size_t url_len = sizeof(url)-1;
@@ -3105,6 +3164,8 @@ int homekit_server_on_url(http_parser *parser, const char *data, size_t length) 
             context->endpoint = HOMEKIT_ENDPOINT_PAIRINGS;
         } else if (!strncmp(data, "/resource", length)) {
             context->endpoint = HOMEKIT_ENDPOINT_RESOURCE;
+        } else if (!strncmp(data, "/config", length)) {
+            context->endpoint = HOMEKIT_ENDPOINT_CONFIG;
         }
     } else if (parser->method == HTTP_PUT) {
         if (!strncmp(data, "/characteristics", length)) {
@@ -3195,6 +3256,10 @@ int homekit_server_on_message_complete(http_parser *parser) {
         }
         case HOMEKIT_ENDPOINT_GET_VERSION: {
             homekit_server_on_get_version(context);
+            break;
+        }
+        case HOMEKIT_ENDPOINT_CONFIG: {
+            homekit_server_on_config(parser);
             break;
         }
         case HOMEKIT_ENDPOINT_UNKNOWN: {
