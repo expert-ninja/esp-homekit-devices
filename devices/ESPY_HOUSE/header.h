@@ -99,6 +99,7 @@
 #define UART_CONFIG_SPEED                   "s"
 #define ACCESSORIES                         "a"
 #define BUTTONS_ARRAY                       "b"
+#define BUTTONS_ARRAY_1                     "b1"
 #define FIXED_BUTTONS_ARRAY_0               "f0"
 #define FIXED_BUTTONS_ARRAY_1               "f1"
 #define FIXED_BUTTONS_ARRAY_2               "f2"
@@ -110,7 +111,10 @@
 #define FIXED_BUTTONS_ARRAY_8               "f8"
 #define FIXED_BUTTONS_STATUS_ARRAY_0        "g0"
 #define FIXED_BUTTONS_STATUS_ARRAY_1        "g1"
+#define FIXED_BUTTONS_STATUS_ARRAY_2        "g2"
+#define FIXED_BUTTONS_STATUS_ARRAY_3        "g3"
 #define PINGS_ARRAY                         "l"
+#define PINGS_ARRAY_1                       "l1"
 #define FIXED_PINGS_ARRAY_0                 "p0"
 #define FIXED_PINGS_ARRAY_1                 "p1"
 #define FIXED_PINGS_ARRAY_2                 "p2"
@@ -122,6 +126,8 @@
 #define FIXED_PINGS_ARRAY_8                 "p8"
 #define FIXED_PINGS_STATUS_ARRAY_0          "q0"
 #define FIXED_PINGS_STATUS_ARRAY_1          "q1"
+#define FIXED_PINGS_STATUS_ARRAY_2          "q2"
+#define FIXED_PINGS_STATUS_ARRAY_3          "q3"
 #define PING_HOST                           "h"
 #define PING_RESPONSE_TYPE                  "r"
 #define PING_RETRIES                        3
@@ -134,6 +140,7 @@
 #define ACCESSORY_INDEX                     "g"
 #define ACCESSORY_INDEX_KILL_SWITCH         "k"
 #define AUTOSWITCH_TIME                     "i"
+#define AUTOSWITCH_TIME_1                   "i1"
 #define PIN_GPIO                            "g"
 #define INITIAL_STATE                       "s"
 #define KILL_SWITCH                         "k"
@@ -342,6 +349,7 @@
 #define ACC_TYPE_OUTLET                     2
 #define ACC_TYPE_BUTTON                     3
 #define ACC_TYPE_LOCK                       4
+#define ACC_TYPE_DOUBLE_LOCK                44
 #define ACC_TYPE_CONTACT_SENSOR             5
 #define ACC_TYPE_OCCUPANCY_SENSOR           6
 #define ACC_TYPE_LEAK_SENSOR                7
@@ -375,7 +383,8 @@
 #define WIFI_STATUS_CONNECTING              1
 #define WIFI_STATUS_PRECONNECTED            2
 #define WIFI_STATUS_CONNECTED               3
-#define WIFI_WATCHDOG_POLL_PERIOD_MS        6000
+#define WIFI_WATCHDOG_POLL_PERIOD_MS        1000
+#define WIFI_RECONNECTION_POLL_PERIOD_MS    5000
 
 #define ACCESSORIES_WITHOUT_BRIDGE          4   // Max number of accessories before using a bridge
 
