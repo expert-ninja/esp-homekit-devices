@@ -46,7 +46,7 @@
 
 #define SNTP_SERVERS            "0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org"
 #define MAX_REDIRECTS           10
-#define MAX_DNS_TRIES           5
+#define MAX_DNS_TRIES           3
 
 #define HASHSIZE                48      //SHA-384
 #define SIGNSIZE                104     //ECDSA r+s in ASN1 format secP384r1
