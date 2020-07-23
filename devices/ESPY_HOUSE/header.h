@@ -83,7 +83,7 @@
 // JSON
 #define GENERAL_CONFIG                      "c"
 #define MDNS_TTL                            "ttl"
-#define MDNS_TTL_DEFAULT                    4500
+#define MDNS_TTL_DEFAULT                    120
 #define CUSTOM_HOSTNAME                     "n"
 #define LOG_OUTPUT                          "o"
 #define ALLOWED_SETUP_MODE_TIME             "m"
