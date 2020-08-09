@@ -2375,9 +2375,7 @@ void homekit_server_on_update_characteristics(client_context_t *context) {
     sdk_system_overclock();
 #endif
 
-    char *data1 = strndup((char *)data, size);
-    cJSON *json = cJSON_Parse(data1);
-    free(data1);
+    cJSON *json = cJSON_Parse((char*) data);
 
     if (!json) {
         CLIENT_ERROR(context, "Failed to parse request JSON");
@@ -2768,9 +2766,11 @@ void homekit_server_on_update_characteristics(client_context_t *context) {
     for (int i=0; i < cJSON_GetArraySize(characteristics); i++) {
         cJSON *j_ch = cJSON_GetArrayItem(characteristics, i);
 
+#ifdef HOMEKIT_DEBUG
         char *s = cJSON_Print(j_ch);
         CLIENT_DEBUG(context, "Processing element %s", s);
         free(s);
+#endif
 
         statuses[i] = process_characteristics_update(j_ch);
 
