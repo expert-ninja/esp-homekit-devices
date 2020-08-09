@@ -429,10 +429,10 @@ static ETSTimer mdns_announce_timer;
 
 void mdns_clear() {
     sdk_os_timer_disarm(&mdns_announce_timer);
-    
+
     if (!xSemaphoreTake(gDictMutex, portMAX_DELAY))
         return;
-    
+
     mdns_rsrc *rsrc = gDictP;
     gDictP = NULL;
 
@@ -552,19 +552,17 @@ void mdns_announce() {
     struct netif *netif = sdk_system_get_netif(STATION_IF);
 #if LWIP_IPV4
     mdns_announce_netif(netif, &gMulticastV4Addr);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-    mdns_announce_netif(netif, &gMulticastV4Addr);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(60 / portTICK_PERIOD_MS);
     mdns_announce_netif(netif, &gMulticastV4Addr);
 #endif
 #if LWIP_IPV6
     mdns_announce_netif(netif, &gMulticastV6Addr);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
-    mdns_announce_netif(netif, &gMulticastV4Addr);
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(60 / portTICK_PERIOD_MS);
     mdns_announce_netif(netif, &gMulticastV4Addr);
 #endif
 }
+
+#define TTL_MULTIPLIER_MS   500                         // Set to 1000 to use standard time
 
 void mdns_add_facility_work(const char* instanceName,   // Friendly name, need not be unique
                             const char* serviceName,    // Must be "_name", e.g. "_hap" or "_http"
@@ -621,10 +619,11 @@ void mdns_add_facility_work(const char* instanceName,   // Friendly name, need n
     sdk_os_timer_disarm(&mdns_announce_timer);
     
     mdns_announce();
-    
+
     if (ttl > 0) {
         sdk_os_timer_setfn(&mdns_announce_timer, mdns_announce, NULL);
         sdk_os_timer_arm(&mdns_announce_timer, ttl * 1000, 1);
+        sdk_os_timer_arm(&mdns_announce_timer, ttl * TTL_MULTIPLIER_MS, 1);
     }
 }
 
@@ -639,15 +638,15 @@ void mdns_add_facility(const char* instanceName,   // Friendly name, need not be
     while (sdk_wifi_station_get_connect_status() != STATION_GOT_IP) {
         vTaskDelayMs(200);
     }
-    
+
     vTaskDelayMs(600);
-    
+
     if (strstr(addText, "sf=1") != NULL) {
         mdns_add_facility_work(instanceName, serviceName, addText, flags, onPort, 0);
         vTaskDelayMs(2000);
         mdns_clear();
     }
-    
+
     mdns_add_facility_work(instanceName, serviceName, addText, flags, onPort, ttl);
 }
 
@@ -738,7 +737,7 @@ static void mdns_send_mcast(const ip_addr_t *addr, u8_t* msgP, int nBytes)
         printf(">>> mdns_send: alloc failed[%d]\n", nBytes);
     }
 }
-    
+
 // Message has passed tests, may want to send an answer
 static void mdns_reply(const ip_addr_t *addr, struct mdns_hdr* hdrP)
 {
@@ -747,7 +746,7 @@ static void mdns_reply(const ip_addr_t *addr, struct mdns_hdr* hdrP)
     mdns_rsrc* extra;
     u8_t* qBase = (u8_t*)hdrP;
     u8_t* qp;
-    
+
     memset(mdns_response, 0, MDNS_RESPONDER_REPLY_SIZE);
 
     // Build response header
@@ -940,7 +939,7 @@ static void mdns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_a
         printf(">>> mdns_recv: pbuf too small\n");
     } else {
         memset(mdns_payload, 0, MDNS_RESPONDER_REPLY_SIZE);
-        
+
         if (pbuf_copy_partial(p, mdns_payload, plen, 0) == plen) {
             struct mdns_hdr* hdrP = (struct mdns_hdr*) mdns_payload;
 #ifdef qLogAllTraffic
@@ -967,7 +966,7 @@ void mdns_init()
     }
 
     LOCK_TCPIP_CORE();
-    
+
     // Start IGMP on the netif for our interface: this isn't done for us
     if (!(netif->flags & NETIF_FLAG_IGMP)) {
         netif->flags |= NETIF_FLAG_IGMP;
@@ -986,7 +985,7 @@ void mdns_init()
         return;
     }
     xSemaphoreGive(gDictMutex);
-    
+
     gMDNS_pcb = udp_new_ip_type(IPADDR_TYPE_ANY);
     if (!gMDNS_pcb) {
         printf(">>> mDNS_init: udp_new failed\n");
@@ -1017,6 +1016,6 @@ void mdns_init()
     udp_bind_netif(gMDNS_pcb, netif);
 
     udp_recv(gMDNS_pcb, mdns_recv, NULL);
-    
+
     UNLOCK_TCPIP_CORE();
 }
