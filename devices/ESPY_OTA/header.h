@@ -14,7 +14,7 @@
 #ifndef __ESPY_OTA_HEADER_H__
 #define __ESPY_OTA_HEADER_H__
 
-#define OTAVERSION              "1.0.3"
+#define OTAVERSION              "1.0.5"
 
 #define CUSTOM_REPO_SYSPARAM     "ota_server"
 #define OTA_VERSION_SYSPARAM     "ota_repo"

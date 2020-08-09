@@ -2099,12 +2099,12 @@ void homekit_server_on_get_setup_mode(client_context_t *context) {
         }
         if (!strcmp(qp->name, "reset_main")) {
             if (!strcmp(qp->value, "1")) {
-                sysparam_set_string(USER_VERSION_SYSPARAM, "none");
+                sysparam_set_string(USER_VERSION_SYSPARAM, "0.0.0");
             }
         }
         if (!strcmp(qp->name, "reset_ota")) {
             if (!strcmp(qp->value, "1")) {
-                sysparam_set_string(OTA_VERSION_SYSPARAM, "none");
+                sysparam_set_string(OTA_VERSION_SYSPARAM, "0.0.0");
             }
         }
         if ((!strcmp(qp->name, "update_now")) && (!strcmp(qp->value, "1"))) {

@@ -53,13 +53,15 @@ typedef enum {
 } endpoint_t;
 
 typedef struct {
-    char *ssid_prefix;
-    char *password;
+    char* ssid_prefix;
+    char* password;
     void (*on_wifi_ready)();
 
     ETSTimer sta_connect_timeout;
     TaskHandle_t http_task_handle;
     TaskHandle_t dns_task_handle;
+
+    uint8_t check_counter: 7;
 } wifi_config_context_t;
 
 static wifi_config_context_t *context;
@@ -491,6 +493,7 @@ static int wifi_config_server_on_message_complete(http_parser *parser) {
             break;
         }
         case ENDPOINT_SETTINGS_UPDATE: {
+            sdk_os_timer_disarm(&context->sta_connect_timeout);
             wifi_config_context_free(context);
             xTaskCreate(wifi_config_server_on_settings_update_task, "on_settings_update_task", (configMINIMAL_STACK_SIZE * 2), client, (tskIDLE_PRIORITY + 0), NULL);
             return 0;
@@ -618,7 +621,7 @@ static void dns_task(void *arg) {
     serv_addr.sin_port = htons(53);
     bind(fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
-    const struct timeval timeout = { 2, 0 }; /* 2 second timeout */
+    const struct timeval timeout = { 1, 200000 }; /* 1.2 second timeout */
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
     const struct ifreq ifreq1 = { "en1" };
@@ -759,18 +762,30 @@ static void wifi_config_sta_connect_timeout_callback(void *arg) {
 
         if (context->on_wifi_ready) {
             http_stop();
-            vTaskDelay(500 / portTICK_PERIOD_MS);
             context->on_wifi_ready();
         }
 
         wifi_config_context_free(context);
         context = NULL;
+    } else {
+        context->check_counter++;
+        if (context->check_counter == 40) {
+            context->check_counter = 0;
+            struct netif *netif = sdk_system_get_netif(STATION_IF);
+            if (netif) {
+                LOCK_TCPIP_CORE();
+                dhcp_release_and_stop(netif);
+                INFO("Restarting DHCP client");
+                dhcp_start(netif);
+                UNLOCK_TCPIP_CORE();
+            }
+        }
     }
 }
 
 static void auto_reboot_run() {
     INFO("Auto Reboot");
-    vTaskDelay(150 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
     sdk_system_restart();
 }
 
@@ -825,6 +840,7 @@ static uint8_t wifi_config_connect() {
         }
 
         sdk_wifi_station_set_config(&sta_config);
+        sdk_wifi_set_opmode(STATION_MODE);
         sdk_wifi_station_connect();
         sdk_wifi_station_set_auto_connect(true);
         free(wifi_ssid);
@@ -847,9 +863,8 @@ static void wifi_config_station_connect() {
     if (wifi_config_connect() == 1 && setup_mode == 0) {
         INFO("\nESPY OTA - NORMAL MODE\n");
         sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 1);
-        wifi_config_sta_connect_timeout_callback(context);
         sdk_os_timer_setfn(&context->sta_connect_timeout, wifi_config_sta_connect_timeout_callback, context);
-        sdk_os_timer_arm(&context->sta_connect_timeout, 1000, 1);
+        sdk_os_timer_arm(&context->sta_connect_timeout, 500, 1);
     } else {
         INFO("\nESPY OTA - SETUP MODE\n");
         sysparam_set_int8(ESPY_SETUP_MODE_SYSPARAM, 0);
@@ -877,6 +892,8 @@ void wifi_config_init(const char *ssid_prefix, const char *password, void (*on_w
     }
 
     context->on_wifi_ready = on_wifi_ready;
+
+    context->check_counter = 0;
 
     wifi_config_station_connect();
 }
